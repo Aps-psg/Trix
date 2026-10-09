@@ -1,0 +1,61 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Run Queue Intelligence Simulation",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/queue_intelligence.py",
+      "args": [
+        "--data",
+        "sample_data.json"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Run Person 2 Forecast Engine (Mock Demo)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/forecast_engine.py",
+      "args": [
+        "--mock",
+        "--steps",
+        "5"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Run Person 2 Tests (test_person2.py)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "-v",
+        "test_person2.py"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Run All Unit Tests (Pytest)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "-v"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
