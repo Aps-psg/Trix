@@ -1,0 +1,56 @@
+{
+  "name": "queueflux-intelligence",
+  "displayName": "QueueFlux Intelligence Layer",
+  "description": "Intelligent Canteen Queue Management, Disruption Detection & Decision Support for VS Code",
+  "version": "1.0.0",
+  "publisher": "queueflux-team",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other",
+    "Testing"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onCommand:queueflux.runDemo",
+    "onCommand:queueflux.runTests",
+    "onCommand:queueflux.analyzeState"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "queueflux.runDemo",
+        "title": "QueueFlux: Run 6-Scenario Demonstration",
+        "category": "QueueFlux"
+      },
+      {
+        "command": "queueflux.runTests",
+        "title": "QueueFlux: Run Full Unit Test Suite",
+        "category": "QueueFlux"
+      },
+      {
+        "command": "queueflux.analyzeState",
+        "title": "QueueFlux: Analyze Real-Time Canteen State",
+        "category": "QueueFlux"
+      }
+    ],
+    "submenus": [],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "queueflux.runDemo"
+        },
+        {
+          "command": "queueflux.runTests"
+        },
+        {
+          "command": "queueflux.analyzeState"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "test": "node ./extension.js"
+  }
+}
