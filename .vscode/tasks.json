@@ -15,9 +15,29 @@
       }
     },
     {
+      "label": "Launch Web Control Tower (FastAPI)",
+      "type": "shell",
+      "command": "python api.py",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Launch Streamlit Dashboard",
+      "type": "shell",
+      "command": "streamlit run app.py",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
       "label": "Run Tests",
       "type": "shell",
-      "command": "pytest test_intelligence.py -v",
+      "command": "pytest -v",
       "group": {
         "kind": "test",
         "isDefault": true

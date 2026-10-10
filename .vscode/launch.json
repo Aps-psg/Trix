@@ -14,6 +14,26 @@
       "justMyCode": true
     },
     {
+      "name": "Python: Run Web UI Backend (api.py)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/api.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Run Streamlit Dashboard (app.py)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "streamlit",
+      "args": [
+        "run",
+        "app.py"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
       "name": "Python: Run Person 2 Forecast Engine (Mock Demo)",
       "type": "debugpy",
       "request": "launch",
