@@ -775,6 +775,10 @@
         }
       }, 1000);
 
+      // Live sync of student token stage & countdown with billing/kitchen updates
+      setInterval(syncStudentTokenState, 800);
+      window.addEventListener('storage', syncStudentTokenState);
+
       // Background telemetry sync
       setInterval(syncTelemetryWithServer, 4000);
     });
@@ -1151,15 +1155,75 @@
       lucide.createIcons();
     }
 
+    function syncStudentTokenState() {
+      if (!activeTicket) return;
+      const orders = getStoredOrders();
+      const myOrder = orders.find(o => o.order_id === activeTicket.order_id || (o.uid === currentUser.uid && o.status !== 'COLLECTED'));
+
+      const bar = document.getElementById('ticketProgressBar');
+      const badge = document.getElementById('ticketStatusBadge');
+      const countdownEl = document.getElementById('ticketCountdown');
+      const estBilling = document.getElementById('estBillingWait');
+      const estKitchen = document.getElementById('estKitchenPrep');
+      const estTotal = document.getElementById('estTotalWaitDisplay');
+
+      if (!myOrder) return;
+
+      if (myOrder.status === 'WAITING_BILLING') {
+        activeTicket.status_step = 1;
+        if (bar) bar.style.width = '25%';
+        if (badge) {
+          badge.textContent = '1. In Billing Line';
+          badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-indigo-600 text-white shadow-xs';
+        }
+      } else if (myOrder.status === 'PREPARING') {
+        // Billing completed -> Ticket moved to Kitchen!
+        if (activeTicket.status_step < 3) {
+          activeTicket.status_step = 3;
+          // Dynamically drop remaining timer: Billing wait is 0, only Kitchen prep remaining!
+          let kPrepMin = 5.0;
+          if (estKitchen && estKitchen.textContent) {
+            kPrepMin = parseFloat(estKitchen.textContent.replace(/[^\d.]/g, '')) || 5.0;
+          }
+          ticketCountdownSec = Math.round(kPrepMin * 60);
+        }
+
+        if (bar) bar.style.width = '75%';
+        if (badge) {
+          badge.textContent = '3. Cooking in Kitchen (Billed ✓)';
+          badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-600 text-white shadow-xs';
+        }
+        if (estBilling) estBilling.textContent = '0.0m (Completed ✓)';
+        if (estTotal && estKitchen) estTotal.textContent = `~${estKitchen.textContent}`;
+      } else if (myOrder.status === 'READY') {
+        // Kitchen completed -> Ready for pickup!
+        activeTicket.status_step = 4;
+        ticketCountdownSec = 0;
+        if (bar) bar.style.width = '100%';
+        if (badge) {
+          badge.textContent = '4. Ready for Pickup! 🔔';
+          badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-600 text-white animate-pulse shadow-md';
+        }
+        if (countdownEl) countdownEl.textContent = 'READY 🔔';
+        if (estBilling) estBilling.textContent = '0.0m (Completed ✓)';
+        if (estKitchen) estKitchen.textContent = '0.0m (Ready ✓)';
+        if (estTotal) estTotal.textContent = 'READY FOR PICKUP 🔔';
+      }
+    }
+
     function advanceActiveTicketDemo() {
       if (!activeTicket) return;
       activeTicket.status_step = (activeTicket.status_step % 4) + 1;
       const bar = document.getElementById('ticketProgressBar');
       const badge = document.getElementById('ticketStatusBadge');
 
+      const orders = getStoredOrders();
+      const myOrder = orders.find(o => o.order_id === activeTicket.order_id || o.uid === currentUser.uid);
+
       if (activeTicket.status_step === 1) {
         bar.style.width = '25%';
         badge.textContent = '1. In Billing Line';
+        if (myOrder) myOrder.status = 'WAITING_BILLING';
       } else if (activeTicket.status_step === 2) {
         bar.style.width = '50%';
         badge.textContent = '2. At Billing Counter';
@@ -1167,13 +1231,25 @@
         recalculateRealTimeWait();
       } else if (activeTicket.status_step === 3) {
         bar.style.width = '75%';
-        badge.textContent = '3. Cooking in Kitchen';
+        badge.textContent = '3. Cooking in Kitchen (Billed ✓)';
+        badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-600 text-white shadow-xs';
+        if (myOrder) myOrder.status = 'PREPARING';
+        let kPrepMin = 5.0;
+        const estKitchen = document.getElementById('estKitchenPrep');
+        if (estKitchen) kPrepMin = parseFloat(estKitchen.textContent.replace(/[^\d.]/g, '')) || 5.0;
+        ticketCountdownSec = Math.round(kPrepMin * 60);
       } else if (activeTicket.status_step === 4) {
         bar.style.width = '100%';
         badge.textContent = '4. Ready for Pickup! 🔔';
         badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-600 text-white animate-pulse';
+        ticketCountdownSec = 0;
+        if (myOrder) myOrder.status = 'READY';
         alert(`🔔 Buzzer Ring: Order ${activeTicket.token_num} is READY for pickup at Counter #${activeTicket.counter_assigned}!`);
       }
+
+      saveStoredOrders(orders);
+      updateStaffOrdersUI();
+      syncStudentTokenState();
     }
 
     // --- Staff Console Logic ---
@@ -1185,6 +1261,7 @@
         waiting.status = 'PREPARING';
         saveStoredOrders(staffOrders);
         updateStaffOrdersUI();
+        syncStudentTokenState();
         if (currentAppView === 'kitchen') renderKitchenGrid();
       }
     }
@@ -1202,6 +1279,7 @@
       else if (order.status === 'READY') staffOrders = staffOrders.filter(o => o.order_id !== orderId);
       saveStoredOrders(staffOrders);
       updateStaffOrdersUI();
+      syncStudentTokenState();
       if (currentAppView === 'kitchen') renderKitchenGrid();
     }
 
