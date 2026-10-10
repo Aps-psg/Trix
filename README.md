@@ -4,6 +4,29 @@
 
 ---
 
+## 🌿 Modular Repository Structure & Branch Navigation Guide
+
+The repository is organized into dedicated, self-contained modular branches so teammates, recruiters, and evaluators can inspect each subsystem in isolation or examine the unified master:
+
+| Branch Name | Focus Area | Technical Ownership | Key Files |
+| :--- | :--- | :--- | :--- |
+| [**`main`**](https://github.com/Aps-psg/Trix/tree/main) | **Production Integrated Master** | Unified Framework | Complete system integrating Person 1, Person 2, Person 3, and Web UI |
+| [**`frontend-backend`**](https://github.com/Aps-psg/Trix/tree/frontend-backend) | **Web Control Tower & REST API** | UI / API Engineering | [`frontend/index.html`](file:///E:/queue-intelligence/frontend/index.html), [`api.py`](file:///E:/queue-intelligence/api.py), [`app.py`](file:///E:/queue-intelligence/app.py) |
+| [**`core-model`**](https://github.com/Aps-psg/Trix/tree/core-model) | **Core Estimation & Forecasting** | Person 2 Core Model | [`workload_model.py`](file:///E:/queue-intelligence/workload_model.py), [`state_estimator.py`](file:///E:/queue-intelligence/state_estimator.py), [`wait_predictor.py`](file:///E:/queue-intelligence/wait_predictor.py), [`forecast_engine.py`](file:///E:/queue-intelligence/forecast_engine.py), [`test_person2.py`](file:///E:/queue-intelligence/test_person2.py) |
+| [**`intelligence-layer`**](https://github.com/Aps-psg/Trix/tree/intelligence-layer) | **Disruptions & Decisions** | Person 3 Intelligence | [`disruption_detector.py`](file:///E:/queue-intelligence/disruption_detector.py), [`propagation_analyzer.py`](file:///E:/queue-intelligence/propagation_analyzer.py), [`decision_optimizer.py`](file:///E:/queue-intelligence/decision_optimizer.py), [`evaluation.py`](file:///E:/queue-intelligence/evaluation.py), [`intelligence_engine.py`](file:///E:/queue-intelligence/intelligence_engine.py) |
+| [**`main-files`**](https://github.com/Aps-psg/Trix/tree/main-files) | **System Integration Drivers** | System Orchestration | [`main.py`](file:///E:/queue-intelligence/main.py), [`queue_intelligence.py`](file:///E:/queue-intelligence/queue_intelligence.py), [`integration_adapter.py`](file:///E:/queue-intelligence/integration_adapter.py), [`sample_data.json`](file:///E:/queue-intelligence/sample_data.json) |
+
+```bash
+# To switch to any branch locally:
+git checkout frontend-backend
+git checkout core-model
+git checkout intelligence-layer
+git checkout main-files
+git checkout main
+```
+
+---
+
 ## 🏛️ System Architecture
 
 The canteen workflow is modeled as a physical 2-stage queuing system:
