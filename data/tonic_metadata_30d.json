@@ -1,0 +1,12 @@
+{
+  "dataset_name": "Tonic_QueueFlux_Canteen_30D",
+  "total_days": 30,
+  "total_records": 47245,
+  "order_type_distribution": {
+    "STANDARD": 0.4468621018097153,
+    "QUICK": 0.37707693935866227,
+    "COMPLEX": 0.1760609588316224
+  },
+  "avg_arrivals_per_day": 1574.8,
+  "disruption_days_count": 5
+}

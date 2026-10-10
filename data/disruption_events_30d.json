@@ -1,0 +1,72 @@
+{
+  "Day_1": [],
+  "Day_2": [],
+  "Day_3": [],
+  "Day_4": [
+    {
+      "type": "BILLING_SLOWDOWN",
+      "start_min": 270,
+      "end_min": 315,
+      "severity": 0.4,
+      "description": "Network latency & POS gateway timeouts"
+    }
+  ],
+  "Day_5": [],
+  "Day_6": [],
+  "Day_7": [],
+  "Day_8": [
+    {
+      "type": "ARRIVAL_SURGE",
+      "start_min": 250,
+      "end_min": 320,
+      "multiplier": 2.3,
+      "description": "Rain deluge forcing campus crowd into canteen"
+    }
+  ],
+  "Day_9": [],
+  "Day_10": [],
+  "Day_11": [],
+  "Day_12": [],
+  "Day_13": [],
+  "Day_14": [
+    {
+      "type": "KITCHEN_BOTTLENECK",
+      "start_min": 280,
+      "end_min": 340,
+      "severity": 0.35,
+      "description": "Appliance outage reducing cooking capacity"
+    }
+  ],
+  "Day_15": [],
+  "Day_16": [],
+  "Day_17": [],
+  "Day_18": [],
+  "Day_19": [],
+  "Day_20": [],
+  "Day_21": [
+    {
+      "type": "ARRIVAL_SURGE",
+      "start_min": 180,
+      "end_min": 220,
+      "multiplier": 2.5,
+      "description": "Exam dismissal surge across 4 lecture halls"
+    }
+  ],
+  "Day_22": [],
+  "Day_23": [],
+  "Day_24": [],
+  "Day_25": [],
+  "Day_26": [],
+  "Day_27": [
+    {
+      "type": "COUNTER_UNAVAILABLE",
+      "start_min": 240,
+      "end_min": 330,
+      "active_counters": 1,
+      "description": "Staff emergency absence"
+    }
+  ],
+  "Day_28": [],
+  "Day_29": [],
+  "Day_30": []
+}

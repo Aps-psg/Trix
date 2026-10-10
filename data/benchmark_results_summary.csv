@@ -1,0 +1,5 @@
+Policy,Avg Wait (m),P95 Wait (m),Max Wait (m),Reneging Rate (%),Wait Pred MAE (m),Wait Pred RMSE (m),5-min FC MAE,CRPS,Coverage 80% CI (%),Wait Saved (%)
+Baseline_Naive,16.59,37.06,52.9,48.09,11.79,16.3,3.58,2.924,29.1,0.0
+Baseline_MMC,16.59,37.06,52.9,48.09,10.79,13.59,3.58,2.924,13.4,0.0
+Baseline_Static_Heuristic,15.78,36.48,50.2,48.55,13.4,19.46,3.12,2.573,22.5,4.9
+QueueFlux_Full,11.7,30.66,41.75,36.42,7.32,12.5,4.69,3.871,25.2,29.5
