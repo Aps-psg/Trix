@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  queueflux_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: queueflux_app
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - DATABASE_URL=sqlite:///data/queueflux.db
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - timescaledb
+    restart: unless-stopped
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: queueflux_timescaledb
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=queueflux
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=queueflux_secret
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  timescale_data:

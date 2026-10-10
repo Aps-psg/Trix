@@ -1,27 +1,23 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QueueFlux — Canteen Queue Intelligence Control Tower</title>
+  <title>QueueFlux — Campus Dining Real-Time Queue & Billing Intelligence</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           colors: {
             brand: {
-              dark: '#080c14',
-              surface: '#0f172a',
-              card: '#131e36',
-              border: 'rgba(56, 189, 248, 0.15)',
-              cyan: '#06b6d4',
-              emerald: '#10b981',
-              amber: '#f59e0b',
-              rose: '#f43f5e',
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
             }
           }
         }
@@ -36,96 +32,104 @@
 
   <style>
     body {
-      background-color: #070b12;
-      color: #f1f5f9;
+      background-color: #f8fafc;
+      color: #0f172a;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
-    .glass-panel {
-      background: linear-gradient(135deg, rgba(19, 30, 54, 0.75), rgba(15, 23, 42, 0.85));
-      border: 1px solid rgba(56, 189, 248, 0.18);
-      backdrop-filter: blur(12px);
-      border-radius: 14px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    .card-surface {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+      border-radius: 16px;
     }
-    .neon-glow-cyan {
-      box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+    .card-surface:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
     }
-    .neon-glow-emerald {
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+    .badge-normal {
+      background-color: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .badge-warning {
+      background-color: #fffbeb;
+      color: #b45309;
+      border: 1px solid #fde68a;
+    }
+    .badge-critical {
+      background-color: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
     }
     .pulse-dot {
-      animation: pulseAnimation 2s infinite;
+      animation: pulseAnim 2s infinite;
     }
-    @keyframes pulseAnimation {
+    @keyframes pulseAnim {
       0% { transform: scale(0.95); opacity: 0.8; }
       50% { transform: scale(1.15); opacity: 1; }
       100% { transform: scale(0.95); opacity: 0.8; }
     }
-    /* Custom scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0b0f19; }
-    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #334155; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col antialiased">
 
-  <!-- TOP HEADER -->
-  <header class="border-b border-slate-800/80 bg-slate-950/80 sticky top-0 z-50 backdrop-blur-md px-6 py-3.5">
-    <div class="max-w-[1600px] mx-auto flex items-center justify-between">
+  <!-- TOP APP NAVIGATION BAR -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-3 shadow-xs">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
       
-      <!-- Logo & System Meta -->
-      <div class="flex items-center space-x-3.5">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-          <i data-lucide="zap" class="w-6 h-6 text-slate-950 font-bold"></i>
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+          <i data-lucide="layers" class="w-5 h-5"></i>
         </div>
         <div>
-          <div class="flex items-center space-x-2.5">
-            <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              QueueFlux
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">
-                v2.0 Model
-              </span>
-            </h1>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-base font-extrabold tracking-tight text-slate-900">QueueFlux</h1>
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot"></span>
+              Live Product Flow
+            </span>
           </div>
-          <p class="text-xs text-slate-400 font-medium">Propagation-Aware, Uncertainty-Aware Queue Intelligence & Control Tower</p>
+          <p class="text-[11px] text-slate-500 font-medium">Real-Time Billing Counter Wait Prediction</p>
         </div>
       </div>
 
-      <!-- Live Clock & Status Badge -->
-      <div class="flex items-center space-x-4">
-        
-        <!-- Live Ticker -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-lg px-3.5 py-1.5 flex items-center space-x-2">
-          <i data-lucide="clock" class="w-4 h-4 text-cyan-400"></i>
-          <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Elapsed:</span>
-          <span id="clockDisplay" class="text-sm font-bold font-mono text-cyan-300">00:00 min</span>
+      <!-- Center Role / View Switcher -->
+      <div class="hidden md:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <button id="navStudent" onclick="switchView('student')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-white text-indigo-700 shadow-xs flex items-center space-x-1.5">
+          <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+          <span>Student App</span>
+        </button>
+        <button id="navStaff" onclick="switchView('staff')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
+          <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+          <span>Billing Counter POS</span>
+        </button>
+        <button id="navManager" onclick="switchView('manager')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
+          <i data-lucide="line-chart" class="w-3.5 h-3.5"></i>
+          <span>AI Control Tower (P1+P2)</span>
+        </button>
+      </div>
+
+      <!-- Right User Identity & Clock -->
+      <div class="flex items-center space-x-3">
+        <div class="hidden sm:flex items-center space-x-2 text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+          <span id="liveClock" class="font-mono">12:30 PM</span>
         </div>
 
-        <!-- Operating Condition Status -->
-        <div id="statusBadge" class="flex items-center space-x-2 px-3.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
-          <span id="statusText">Status: Normal Flow</span>
-        </div>
-
-        <!-- Connection Mode -->
-        <div id="connectionBadge" class="hidden sm:flex items-center space-x-1.5 text-xs text-slate-400 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 font-medium">
-          <i data-lucide="cpu" class="w-3.5 h-3.5 text-indigo-400"></i>
-          <span id="connectionText">Hybrid Math Engine</span>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex items-center space-x-2">
-          <button id="btnAutoPlay" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md shadow-cyan-600/30 transition-all">
-            <i data-lucide="play" class="w-3.5 h-3.5"></i>
-            <span id="autoPlayLabel">Auto-Run</span>
-          </button>
-          <button id="btnStep" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all">
-            <i data-lucide="step-forward" class="w-3.5 h-3.5"></i>
-            <span>+1 Min</span>
-          </button>
-          <button id="btnReset" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition-all" title="Reset Simulation">
-            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        <!-- Student Identity Badge with UID -->
+        <div id="userProfileBadge" class="flex items-center space-x-2 pl-2 border-l border-slate-200">
+          <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs" id="userAvatar">
+            🎓
+          </div>
+          <div class="text-left cursor-pointer" onclick="openLoginModal()">
+            <div class="flex items-center space-x-1.5">
+              <span id="userName" class="text-xs font-bold text-slate-800">Alex Chen</span>
+              <span id="userRollBadge" class="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded">24CS108</span>
+            </div>
+            <p id="userUidBadge" class="text-[10px] text-slate-500 font-mono">UID: STU-24CS108-8421</p>
+          </div>
+          <button onclick="openLoginModal()" title="Switch User / Roll No" class="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-slate-100 text-xs">
+            <i data-lucide="log-in" class="w-4 h-4"></i>
           </button>
         </div>
 
@@ -134,867 +138,1119 @@
     </div>
   </header>
 
-  <!-- MAIN DASHBOARD CONTENT -->
-  <main class="flex-1 max-w-[1600px] w-full mx-auto p-6 space-y-6">
+  <!-- MAIN APPLICATION CONTENT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
 
-    <!-- 1. KEY TELEMETRY CARDS HUD -->
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      
-      <!-- Stage A: Billing Queue -->
-      <div class="glass-panel p-5 relative overflow-hidden group hover:border-cyan-500/40 transition-all">
-        <div class="flex justify-between items-start">
-          <div>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Stage A: Billing Queue</p>
-            <div class="flex items-baseline space-x-2 mt-1">
-              <span id="hudBillingCount" class="text-3xl font-extrabold text-white">0</span>
-              <span class="text-xs text-slate-400">waiting</span>
-            </div>
-          </div>
-          <div class="p-2.5 rounded-xl bg-cyan-950/80 text-cyan-400 border border-cyan-800/50">
-            <i data-lucide="receipt" class="w-5 h-5"></i>
-          </div>
-        </div>
-        <div class="mt-3.5 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs">
-          <span class="text-slate-400">Particle Filter Est:</span>
-          <span id="hudBillingEst" class="font-mono text-cyan-300 font-semibold">0.0 [90% CI: 0-0]</span>
-        </div>
-        <div class="mt-1 flex items-center justify-between text-xs">
-          <span class="text-slate-400">Workload:</span>
-          <span id="hudBillingWorkload" class="font-mono text-slate-300 font-medium">0.0 min</span>
-        </div>
-      </div>
+    <!-- ===================================================================== -->
+    <!-- 1. STUDENT VIEW: BILLING WAIT ESTIMATION & ORDER APP                 -->
+    <!-- ===================================================================== -->
+    <div id="viewStudent" class="space-y-6">
 
-      <!-- Stage B: Kitchen Backlog -->
-      <div class="glass-panel p-5 relative overflow-hidden group hover:border-emerald-500/40 transition-all">
-        <div class="flex justify-between items-start">
-          <div>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Stage B: Kitchen Backlog</p>
-            <div class="flex items-baseline space-x-2 mt-1">
-              <span id="hudKitchenCount" class="text-3xl font-extrabold text-white">0</span>
-              <span class="text-xs text-slate-400">orders</span>
-            </div>
-          </div>
-          <div class="p-2.5 rounded-xl bg-emerald-950/80 text-emerald-400 border border-emerald-800/50">
-            <i data-lucide="utensils" class="w-5 h-5"></i>
-          </div>
-        </div>
-        <div class="mt-3.5 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs">
-          <span class="text-slate-400">Particle Filter Est:</span>
-          <span id="hudKitchenEst" class="font-mono text-emerald-300 font-semibold">0.0 [90% CI: 0-0]</span>
-        </div>
-        <div class="mt-1 flex items-center justify-between text-xs">
-          <span class="text-slate-400">Workload:</span>
-          <span id="hudKitchenWorkload" class="font-mono text-slate-300 font-medium">0.0 min</span>
-        </div>
-      </div>
-
-      <!-- Predicted Wait Time -->
-      <div class="glass-panel p-5 relative overflow-hidden group hover:border-amber-500/40 transition-all">
-        <div class="flex justify-between items-start">
-          <div>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Predicted Meal Wait Time</p>
-            <div class="flex items-baseline space-x-2 mt-1">
-              <span id="hudMealWait" class="text-3xl font-extrabold text-white">5.8</span>
-              <span class="text-xs text-slate-400">min</span>
-            </div>
-          </div>
-          <div class="p-2.5 rounded-xl bg-amber-950/80 text-amber-400 border border-amber-800/50">
-            <i data-lucide="hourglass" class="w-5 h-5"></i>
-          </div>
-        </div>
-        <div class="mt-3.5 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs">
-          <span class="text-slate-400">Registration → Pickup:</span>
-          <span id="hudWaitRange" class="font-mono text-amber-300 font-semibold">4.5 - 7.2 min</span>
-        </div>
-        <div class="mt-1 flex items-center justify-between text-xs">
-          <span class="text-slate-400">Fast Item (Beverage):</span>
-          <span id="hudBevWait" class="font-mono text-slate-300 font-medium">~2.0 min</span>
-        </div>
-      </div>
-
-      <!-- 5-Minute Bottleneck Risk -->
-      <div class="glass-panel p-5 relative overflow-hidden group hover:border-rose-500/40 transition-all">
-        <div class="flex justify-between items-start">
-          <div>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">5-Min Bottleneck Risk</p>
-            <div class="flex items-baseline space-x-2 mt-1">
-              <span id="hudBottleneckProb" class="text-3xl font-extrabold text-emerald-400">4.5%</span>
-              <span class="text-xs text-slate-400">probability</span>
-            </div>
-          </div>
-          <div class="p-2.5 rounded-xl bg-rose-950/80 text-rose-400 border border-rose-800/50">
-            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-          </div>
-        </div>
-        <div class="mt-3.5 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs">
-          <span class="text-slate-400">Horizon t+5 Backlog:</span>
-          <span id="hudFutureBacklog" class="font-mono text-slate-300 font-semibold">Median ~4 orders</span>
-        </div>
-        <div class="mt-1 flex items-center justify-between text-xs">
-          <span class="text-slate-400">Threshold:</span>
-          <span class="font-mono text-slate-400">> 15 total orders</span>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- 2. CANTEEN PHYSICAL DIGITAL TWIN VISUAL PIPELINE -->
-    <section class="glass-panel p-6">
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center space-x-2.5">
-          <i data-lucide="layout-grid" class="w-5 h-5 text-cyan-400"></i>
-          <h2 class="text-base font-bold text-white tracking-wide">Live Canteen Operational Flow (Two-Stage Pipeline)</h2>
-        </div>
-        <span class="text-xs text-slate-400">Event Sequence: Arrived → Billing → Kitchen Prep → Ready Shelf</span>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-        
-        <!-- STAGE A: BILLING COUNTERS (Cols 5) -->
-        <div class="lg:col-span-5 bg-slate-900/80 border border-cyan-900/50 rounded-xl p-4.5 relative">
-          <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
-            <div class="flex items-center space-x-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-              <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">Stage A: Billing Area</span>
-            </div>
-            <span id="badgeActiveCounters" class="text-xs font-semibold text-cyan-400 bg-cyan-950/70 border border-cyan-800 px-2 py-0.5 rounded-full">
-              2 Active Counters
-            </span>
-          </div>
-
-          <!-- Customer Queue Lane -->
-          <div class="mb-3.5">
-            <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5 font-medium">
-              <span>Customer Waiting Line:</span>
-              <span id="visualBillingCountText" class="text-cyan-400 font-mono font-bold">0 in queue</span>
-            </div>
-            <div id="billingQueueLane" class="h-10 bg-slate-950 rounded-lg border border-slate-800 px-2.5 flex items-center space-x-1.5 overflow-hidden">
-              <span class="text-xs text-slate-600 italic">Queue Empty</span>
-            </div>
-          </div>
-
-          <!-- Counters Status -->
-          <div class="grid grid-cols-2 gap-2.5" id="billingCountersGrid">
-            <!-- Dynamic Counter Cards Generated Here -->
-          </div>
-        </div>
-
-        <!-- TRANSITION CONVEYOR (Cols 2) -->
-        <div class="lg:col-span-2 flex flex-col items-center justify-center p-3 text-center">
-          <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-md mb-2">
-            <i data-lucide="arrow-right" class="w-6 h-6 text-cyan-400"></i>
-          </div>
-          <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Ticket Transfer</span>
-          <p class="text-[11px] text-slate-500 mt-0.5">Payment Completed → Enters Kitchen Backlog</p>
-          <div id="transferPulseBadge" class="mt-2 text-xs font-mono text-emerald-400 font-semibold px-2 py-0.5 rounded bg-emerald-950 border border-emerald-800">
-            0 orders/min
-          </div>
-        </div>
-
-        <!-- STAGE B: KITCHEN PREP STATIONS (Cols 5) -->
-        <div class="lg:col-span-5 bg-slate-900/80 border border-emerald-900/50 rounded-xl p-4.5 relative">
-          <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
-            <div class="flex items-center space-x-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-              <span class="text-xs font-bold uppercase tracking-wider text-emerald-300">Stage B: Kitchen Prep</span>
-            </div>
-            <span id="badgeActiveStations" class="text-xs font-semibold text-emerald-400 bg-emerald-950/70 border border-emerald-800 px-2 py-0.5 rounded-full">
-              3 Active Stations
-            </span>
-          </div>
-
-          <!-- Kitchen Ticket Queue Lane -->
-          <div class="mb-3.5">
-            <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5 font-medium">
-              <span>Backlog Orders by Type:</span>
-              <span id="visualKitchenCountText" class="text-emerald-400 font-mono font-bold">0 in kitchen</span>
-            </div>
-            <div id="kitchenQueueLane" class="h-10 bg-slate-950 rounded-lg border border-slate-800 px-2.5 flex items-center space-x-1.5 overflow-hidden">
-              <span class="text-xs text-slate-600 italic">No Backlog Orders</span>
-            </div>
-          </div>
-
-          <!-- Kitchen Stations Status -->
-          <div class="grid grid-cols-3 gap-2" id="kitchenStationsGrid">
-            <!-- Dynamic Kitchen Cards Generated Here -->
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- 3. LIVE CHARTS GRID -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      
-      <!-- Chart 1: Queue Backlog Over Time (Cols 7) -->
-      <div class="lg:col-span-7 glass-panel p-5">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center space-x-2">
-            <i data-lucide="line-chart" class="w-4 h-4 text-cyan-400"></i>
-            <h3 class="text-sm font-bold text-white tracking-wide">Queue Backlog History (Ground Truth vs. Particle Filter Estimate)</h3>
-          </div>
-          <span class="text-xs text-slate-400 font-mono">Live Timeline</span>
-        </div>
-        <div class="h-64 w-full">
-          <canvas id="queueHistoryChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Chart 2: 5-Minute Probabilistic Forecast (Cols 5) -->
-      <div class="lg:col-span-5 glass-panel p-5">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center space-x-2">
-            <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
-            <h3 class="text-sm font-bold text-white tracking-wide">5-Minute Horizon Forecast: P(X_{t+5} | Y_{1:t})</h3>
-          </div>
-          <span id="bottleneckBadge" class="text-xs font-bold text-emerald-400 bg-emerald-950 border border-emerald-800 px-2 py-0.5 rounded">
-            Safe Flow
-          </span>
-        </div>
-        <div class="h-64 w-full">
-          <canvas id="forecastChart"></canvas>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- 4. INTELLIGENCE CONTROLS & DECISION OPTIMIZER DOCK -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      
-      <!-- Operational Controls & Disruption Injection (Cols 6) -->
-      <div class="lg:col-span-6 glass-panel p-5">
-        <div class="flex items-center space-x-2 mb-4 border-b border-slate-800 pb-2">
-          <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i>
-          <h3 class="text-sm font-bold text-white tracking-wide">Interactive Controls & Disruption Scenarios</h3>
-        </div>
-
-        <!-- Disruption Injectors -->
-        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Simulate Real Canteen Scenarios:</p>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-          <button onclick="setCondition('NORMAL')" class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-400 text-xs font-semibold transition-all">
-            🟢 Normal Flow
-          </button>
-          <button onclick="setCondition('DEMAND_SURGE')" class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-400 text-xs font-semibold transition-all">
-            ⚡ Rush Hour Surge
-          </button>
-          <button onclick="setCondition('BILLING_SLOWDOWN')" class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-rose-500/40 text-rose-400 text-xs font-semibold transition-all">
-            🛑 POS Slowdown
-          </button>
-          <button onclick="setCondition('RESOURCE_FAILURE')" class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-purple-500/40 text-purple-400 text-xs font-semibold transition-all">
-            ⚠️ Counter Breakdown
-          </button>
-          <button onclick="setCondition('KITCHEN_SLOWDOWN')" class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-red-500/40 text-red-400 text-xs font-semibold transition-all">
-            🍳 Kitchen Slowdown
-          </button>
-          <button onclick="openBenchmarkModal()" class="px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-900 to-indigo-900 border border-cyan-500/50 text-cyan-200 text-xs font-bold transition-all shadow-md">
-            🏆 Run Benchmarks
-          </button>
-        </div>
-
-        <!-- Resource Sliders -->
-        <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
-          <div>
-            <div class="flex justify-between text-xs font-medium text-slate-300 mb-1">
-              <span>Billing Counters (C^B):</span>
-              <span id="sliderBillingVal" class="text-cyan-400 font-bold">2</span>
-            </div>
-            <input id="sliderBilling" type="range" min="1" max="5" value="2" class="w-full accent-cyan-400 cursor-pointer" oninput="updateConfig()">
-          </div>
-          <div>
-            <div class="flex justify-between text-xs font-medium text-slate-300 mb-1">
-              <span>Kitchen Stations (C^K):</span>
-              <span id="sliderKitchenVal" class="text-emerald-400 font-bold">3</span>
-            </div>
-            <input id="sliderKitchen" type="range" min="1" max="6" value="3" class="w-full accent-emerald-400 cursor-pointer" oninput="updateConfig()">
-          </div>
-        </div>
-      </div>
-
-      <!-- Decision Optimizer Recommendation Card (Cols 6) -->
-      <div class="lg:col-span-6 glass-panel p-5 border-emerald-500/30 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
-            <div class="flex items-center space-x-2">
-              <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-400"></i>
-              <h3 class="text-sm font-bold text-white tracking-wide">Uncertainty-Aware Decision Optimizer</h3>
-            </div>
-            <span class="text-xs text-slate-400 font-mono">Objective: min J(a, X)</span>
-          </div>
-
-          <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 mb-3">
-            <div class="flex items-center justify-between">
-              <div>
-                <span class="text-xs text-emerald-300 font-semibold uppercase tracking-wider">Recommended Operational Intervention:</span>
-                <h4 id="recActionTitle" class="text-xl font-extrabold text-white mt-0.5">NO_ACTION</h4>
-              </div>
-              <span id="recStabilityBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-900/80 text-emerald-300 border border-emerald-600">
-                Stability: 95%
+      <!-- TOP BANNER: LIVE BILLING COUNTER TELEMETRY CARD -->
+      <div class="card-surface p-5 sm:p-6 bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white shadow-lg">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+          
+          <!-- Left: Real-Time Billing Status & Live Wait -->
+          <div class="space-y-2">
+            <div class="flex items-center space-x-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-dot"></span>
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-200">Billing Counter Live Telemetry</span>
+              <span id="billingStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                🟢 NORMAL CHECKOUT FLOW
               </span>
             </div>
-            <p id="recReasoning" class="text-xs text-slate-300 mt-2">
-              Queue backlog is within normal capacity limits. No intervention necessary.
+            
+            <h2 class="text-2xl sm:text-3xl font-black tracking-tight">
+              Estimated Billing Wait: <span id="heroBillingWait" class="text-emerald-400 font-mono">~3.6 mins</span>
+            </h2>
+            
+            <p class="text-xs text-indigo-200 flex items-center space-x-2">
+              <span>Your Line Position: <b id="heroQueuePos" class="text-white font-mono">#5 in line</b></span>
+              <span>•</span>
+              <span>Counter Assigned: <b id="heroCounterNum" class="text-white font-mono">Billing Counter #1</b></span>
             </p>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 text-xs">
-            <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-lg">
-              <span class="text-slate-400">Expected Waiting Time Reduction:</span>
-              <p id="recWaitSaving" class="text-sm font-bold text-emerald-400 mt-0.5">+0.0%</p>
+          <!-- Right: Live Billing Telemetry Data Feed -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white/10 backdrop-blur-md p-3.5 rounded-xl border border-white/10 text-xs font-medium">
+            <div class="text-center sm:text-left">
+              <span class="text-[10px] text-indigo-200 block uppercase">Queue Length</span>
+              <span id="heroQueueLength" class="text-lg font-bold text-white font-mono">4</span>
+              <span class="text-[10px] text-indigo-300 block">people ahead</span>
             </div>
-            <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-lg">
-              <span class="text-slate-400">Total Operational Objective Cost:</span>
-              <p id="recObjectiveCost" class="text-sm font-bold text-cyan-400 mt-0.5">J = 8.5 units</p>
+            <div class="text-center sm:text-left">
+              <span class="text-[10px] text-indigo-200 block uppercase">Active Counters</span>
+              <span id="heroActiveCounters" class="text-lg font-bold text-white font-mono">2</span>
+              <span class="text-[10px] text-indigo-300 block">cashiers open</span>
+            </div>
+            <div class="text-center sm:text-left">
+              <span class="text-[10px] text-indigo-200 block uppercase">Service Speed</span>
+              <span id="heroServiceSpeed" class="text-lg font-bold text-white font-mono">1.2</span>
+              <span class="text-[10px] text-indigo-300 block">min / person</span>
+            </div>
+            <div class="text-center sm:text-left">
+              <span class="text-[10px] text-indigo-200 block uppercase">Throughput</span>
+              <span id="heroThroughput" class="text-lg font-bold text-emerald-400 font-mono">1.67</span>
+              <span class="text-[10px] text-indigo-300 block">cust / min</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Real-Time Queuing Formula Card (White-box transparency) -->
+        <div class="mt-4 pt-3.5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-indigo-200 gap-2">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="info" class="w-3.5 h-3.5 text-indigo-300"></i>
+            <span>Real-Time Queuing Formula: <code id="heroFormulaDisplay" class="bg-black/30 px-2 py-0.5 rounded font-mono text-white text-[11px]">(4 queue + 1) ÷ (2 counters × 0.83 serv/min) = 3.6 mins</code></span>
+          </div>
+          <button onclick="toggleBillingSimulator()" class="text-xs text-indigo-300 hover:text-white underline font-semibold flex items-center space-x-1 cursor-pointer">
+            <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+            <span>Adjust / Test Billing Inputs</span>
+          </button>
+        </div>
+
+        <!-- Expandable Live Billing Inputs Tester Widget -->
+        <div id="billingSimulatorWidget" class="hidden mt-4 p-4 bg-slate-900/90 rounded-xl border border-indigo-500/40 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+              <i data-lucide="cpu" class="w-4 h-4 text-indigo-400"></i>
+              Live Billing Counter Parameter Simulator
+            </h4>
+            <span class="text-[11px] text-slate-400">Updates wait time in real-time</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-slate-300">Queue Length at Counter:</span>
+                <span id="sliderQueueVal" class="font-bold text-emerald-400 font-mono">4</span>
+              </div>
+              <input type="range" id="simQueueSlider" min="0" max="25" value="4" oninput="onSimulatorChange()" class="w-full accent-indigo-500">
+            </div>
+            <div>
+              <span class="text-slate-300 block mb-1">Active Billing Counters:</span>
+              <div class="flex space-x-1.5">
+                <button onclick="setSimCounters(1)" id="btnSimCnt1" class="flex-1 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 font-bold hover:bg-slate-700">1</button>
+                <button onclick="setSimCounters(2)" id="btnSimCnt2" class="flex-1 py-1 rounded bg-indigo-600 text-white font-bold">2</button>
+                <button onclick="setSimCounters(3)" id="btnSimCnt3" class="flex-1 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 font-bold hover:bg-slate-700">3</button>
+                <button onclick="setSimCounters(4)" id="btnSimCnt4" class="flex-1 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 font-bold hover:bg-slate-700">4</button>
+              </div>
+            </div>
+            <div class="flex items-end space-x-2">
+              <button onclick="adjustSimQueue(1)" class="flex-1 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all flex items-center justify-center space-x-1">
+                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                <span>+1 In Line</span>
+              </button>
+              <button onclick="adjustSimQueue(-1)" class="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all flex items-center justify-center space-x-1">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                <span>-1 Served</span>
+              </button>
             </div>
           </div>
         </div>
 
-        <div class="mt-4 pt-2 border-t border-slate-800 text-[11px] text-slate-500 flex justify-between items-center">
-          <span>Evaluates: alpha * WaitTime + beta * CongestionPenalty + gamma * Cost</span>
-          <span class="text-emerald-400 font-semibold">Bayesian Particle Consensus</span>
+      </div>
+
+      <!-- MAIN APP INTERACTION GRID: FOOD MENU (LEFT 7) + REAL-TIME ORDER TICKET (RIGHT 5) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- FOOD MENU & SELECTION (Cols 7) -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
+              <i data-lucide="utensils" class="w-4 h-4 text-indigo-600"></i>
+              <span>Select Items & Calculate Total Prep Wait</span>
+            </h3>
+            <span class="text-xs text-slate-500">Fast Billing + Kitchen Pipeline</span>
+          </div>
+
+          <!-- Food Items Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" id="menuGrid">
+            <!-- Populated dynamically by JavaScript -->
+          </div>
+        </div>
+
+        <!-- REAL-TIME BREAKDOWN & ORDER TICKET (Cols 5) -->
+        <div class="lg:col-span-5 space-y-4">
+          
+          <!-- Live Calculation Breakdown Card -->
+          <div class="card-surface p-5 border-indigo-100 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="calculator" class="w-4 h-4 text-indigo-600"></i>
+                Real-Time Journey Time Breakdown
+              </h4>
+              <span id="estCongestionBadge" class="text-xs font-bold px-2 py-0.5 rounded-full badge-normal">
+                Normal Flow
+              </span>
+            </div>
+
+            <!-- Wait Stages Breakdown -->
+            <div class="space-y-2.5 text-xs">
+              
+              <!-- Stage 1: Billing Counter Wait -->
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                <div class="flex items-center space-x-2">
+                  <div class="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">1</div>
+                  <div>
+                    <span class="font-bold text-slate-800 block">Stage A: Billing Counter</span>
+                    <span class="text-[10px] text-slate-500">Queue delay + POS checkout</span>
+                  </div>
+                </div>
+                <span id="estBillingWait" class="font-bold text-indigo-700 font-mono text-sm">3.6 mins</span>
+              </div>
+
+              <!-- Stage 2: Kitchen Cooking Prep -->
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                <div class="flex items-center space-x-2">
+                  <div class="w-6 h-6 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">2</div>
+                  <div>
+                    <span class="font-bold text-slate-800 block">Stage B: Kitchen Prep</span>
+                    <span class="text-[10px] text-slate-500">Chef cooking & assembly</span>
+                  </div>
+                </div>
+                <span id="estKitchenPrep" class="font-bold text-amber-700 font-mono text-sm">5.0 mins</span>
+              </div>
+
+            </div>
+
+            <!-- Total Combined Expected Wait -->
+            <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 rounded-xl text-white text-center">
+              <span class="text-[11px] uppercase tracking-wider text-indigo-300 font-semibold">Total Estimated Journey Time</span>
+              <div class="text-3xl font-black mt-0.5 text-emerald-400 font-mono" id="estTotalWaitDisplay">~8.6 mins</div>
+              <p class="text-xs text-indigo-200 mt-1">Expected Ready Time: <span id="estReadyTimeDisplay" class="font-bold font-mono text-white">12:38 PM</span></p>
+            </div>
+
+            <!-- Order Confirmation Button -->
+            <button id="btnPlaceOrder" onclick="submitConsumerOrder()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center space-x-2 cursor-pointer">
+              <i data-lucide="ticket" class="w-4 h-4 text-emerald-300"></i>
+              <span>Generate Queue Token & Confirm Order</span>
+            </button>
+
+          </div>
+
+          <!-- ACTIVE DIGITAL ORDER TOKEN / LIVE TICKET CONTAINER -->
+          <div id="activeTicketContainer" class="hidden card-surface p-5 border-emerald-300 bg-emerald-50/30 shadow-sm space-y-4">
+            
+            <div class="flex justify-between items-start border-b border-emerald-200 pb-3">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800">Active Live Token</span>
+                <h4 id="ticketOrderId" class="text-xl font-black text-slate-900 font-mono mt-0.5">#TOKEN-24CS-104</h4>
+                <p class="text-xs text-slate-600 font-medium mt-0.5">
+                  Student: <b id="ticketStudentName">Alex Chen</b> • <span id="ticketStudentUid" class="font-mono text-emerald-800 font-bold">UID: STU-24CS108-8421</span>
+                </p>
+              </div>
+              <span id="ticketStatusBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-600 text-white shadow-xs">
+                In Queue
+              </span>
+            </div>
+
+            <!-- Live 4-Step Progress Stepper -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-[11px] font-bold text-slate-600">
+                <span>1. Token Issued</span>
+                <span>2. At Billing</span>
+                <span>3. Cooking</span>
+                <span>4. Ready 🔔</span>
+              </div>
+              <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div id="ticketProgressBar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 25%"></div>
+              </div>
+            </div>
+
+            <!-- Live Seconds Countdown Timer -->
+            <div class="bg-white p-3 rounded-xl border border-emerald-200 flex items-center justify-between">
+              <div>
+                <span class="text-[10px] text-slate-500 block uppercase font-bold">Assigned Billing Counter</span>
+                <span id="ticketCounter" class="text-sm font-bold text-slate-900 font-mono">Counter #1</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-slate-500 block uppercase font-bold">Estimated Pickup In</span>
+                <span id="ticketCountdown" class="text-lg font-black text-emerald-700 font-mono">08:20</span>
+              </div>
+            </div>
+
+            <!-- Simulation Action to advance this order for demo -->
+            <div class="flex space-x-2 pt-1">
+              <button onclick="advanceActiveTicketDemo()" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all">
+                <i data-lucide="fast-forward" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Advance Order Status (Demo)</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ===================================================================== -->
+    <!-- 2. BILLING COUNTER POS STAFF CONSOLE                                -->
+    <!-- ===================================================================== -->
+    <div id="viewStaff" class="hidden space-y-6">
+      
+      <!-- Staff Header & Direct Counter Controls -->
+      <div class="card-surface p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <h3 class="text-base font-bold text-slate-900">Billing Counter & Kitchen Operator Console</h3>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold font-mono">Staff POS</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Serve students at Billing Counter, verify UID tokens, and push orders to Kitchen.</p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="staffServeNextCustomer()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-xs flex items-center space-x-1.5">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            <span>Serve Next at Billing</span>
+          </button>
+          <button onclick="staffAddCustomer()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-xs flex items-center space-x-1.5">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>+1 Walk-in Customer</span>
+          </button>
         </div>
       </div>
 
-    </section>
+      <!-- Live Order Lifecycle Columns -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        
+        <!-- Column 1: Waiting at Billing Counter -->
+        <div class="card-surface p-4 border-t-4 border-indigo-500 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <i data-lucide="receipt" class="w-4 h-4 text-indigo-600"></i>
+              Stage A: Waiting Billing
+            </h4>
+            <span id="staffCountBilling" class="text-xs font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono">0</span>
+          </div>
+          <div id="staffBillingOrdersList" class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Column 2: Preparing in Kitchen -->
+        <div class="card-surface p-4 border-t-4 border-amber-500 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <i data-lucide="flame" class="w-4 h-4 text-amber-500"></i>
+              Stage B: Kitchen Cooking
+            </h4>
+            <span id="staffCountKitchen" class="text-xs font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-mono">0</span>
+          </div>
+          <div id="staffKitchenOrdersList" class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Column 3: Ready for Pickup -->
+        <div class="card-surface p-4 border-t-4 border-emerald-500 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <i data-lucide="bell" class="w-4 h-4 text-emerald-500"></i>
+              Stage C: Ready for Pickup
+            </h4>
+            <span id="staffCountReady" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono">0</span>
+          </div>
+          <div id="staffReadyOrdersList" class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ===================================================================== -->
+    <!-- 3. AI CONTROL TOWER: PERSON 1 & PERSON 2 DASHBOARD                   -->
+    <!-- ===================================================================== -->
+    <div id="viewManager" class="hidden space-y-6">
+
+      <!-- Executive Overview Banner -->
+      <div class="card-surface p-5 flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <h3 class="text-base font-bold text-slate-900">QueueFlux Multi-Agent Intelligence Tower</h3>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold">Autonomous Optimization</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Person 1 (ML Forecast & Tonic Data) + Person 2 (Root Cause Detection) + Person 3 (Integration & Docker)</p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="triggerDisruption('NORMAL')" class="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700">Normal</button>
+          <button onclick="triggerDisruption('HIGH_DEMAND')" class="px-2.5 py-1.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 text-xs font-semibold">Rush Surge</button>
+          <button onclick="triggerDisruption('SLOW_SERVICE')" class="px-2.5 py-1.5 rounded-lg border border-rose-300 bg-rose-50 text-rose-800 text-xs font-semibold">Slow POS</button>
+          <button onclick="triggerDisruption('COUNTER_IMBALANCE')" class="px-2.5 py-1.5 rounded-lg border border-purple-300 bg-purple-50 text-purple-800 text-xs font-semibold">1 Counter</button>
+        </div>
+      </div>
+
+      <!-- Person 1 & Person 2 Cards -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- Person 2 Intelligence Card (Cols 6) -->
+        <div class="lg:col-span-6 card-surface p-5 border-indigo-200">
+          <div class="flex justify-between items-center mb-3 border-b border-slate-100 pb-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <i data-lucide="shield-alert" class="w-4 h-4 text-indigo-600"></i>
+              Person 2: Root Cause Congestion & Decision Optimizer
+            </h4>
+            <span id="mgrCauseBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+              NORMAL
+            </span>
+          </div>
+
+          <div class="bg-indigo-50/50 rounded-xl p-4 border border-indigo-100 mb-4">
+            <p class="text-xs text-indigo-900 font-semibold uppercase tracking-wider">Recommended Operational Intervention:</p>
+            <h5 id="mgrRecAction" class="text-lg font-black text-indigo-700 mt-0.5">NO_ACTION</h5>
+            <p id="mgrActionExplain" class="text-xs text-slate-600 mt-1.5">Maintain current server staffing. Queue flow is stable.</p>
+            <div class="mt-3 flex items-center justify-between">
+              <span class="text-xs text-emerald-700 font-bold">Estimated Wait Reduction: <span id="mgrSavingsPct">0.0%</span></span>
+              <button onclick="applyManagerRecommendation()" id="btnApplyAction" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs">
+                Apply Action
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span class="text-slate-500 block text-[10px] uppercase">Surge Detection Flag</span>
+              <span id="mgrSurgeFlag" class="font-bold text-slate-800">Inactive</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span class="text-slate-500 block text-[10px] uppercase">Service Slowdown Flag</span>
+              <span id="mgrSlowFlag" class="font-bold text-slate-800">Inactive</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Person 1 5-Minute Forecast Chart (Cols 6) -->
+        <div class="lg:col-span-6 card-surface p-5">
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <i data-lucide="trending-up" class="w-4 h-4 text-indigo-600"></i>
+              Person 1: 5-Minute Forward Forecast (t+1 ... t+5)
+            </h4>
+            <span class="text-[11px] text-slate-500 font-mono">Horizon: 5 min</span>
+          </div>
+          <div class="h-56 w-full">
+            <canvas id="chartForecast5Min"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TimescaleDB Historical Queue Telemetry Stream Table -->
+      <div class="card-surface p-5">
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="database" class="w-4 h-4 text-indigo-600"></i>
+            TimescaleDB Time-Series Telemetry Stream (`canteen_telemetry_ts`)
+          </h4>
+          <span class="text-xs text-slate-500 font-mono">Auto-Syncing</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">Timestamp</th>
+                <th class="py-2.5 px-3">Arrival Rate</th>
+                <th class="py-2.5 px-3">Service Rate</th>
+                <th class="py-2.5 px-3">Queue Backlog</th>
+                <th class="py-2.5 px-3">Active Counters</th>
+                <th class="py-2.5 px-3">Avg Service Time</th>
+                <th class="py-2.5 px-3">Congestion Status</th>
+              </tr>
+            </thead>
+            <tbody id="dbHistoryBody" class="divide-y divide-slate-100 font-mono">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
 
   </main>
 
-  <!-- BENCHMARK MODAL -->
-  <div id="benchmarkModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="glass-panel max-w-2xl w-full p-6 relative border-cyan-500/40">
-      <div class="flex justify-between items-start mb-4">
-        <div>
-          <h3 class="text-lg font-bold text-white">Quantitative Benchmark & Performance Proof</h3>
-          <p class="text-xs text-slate-400">Paired evaluation across 30 minutes of simulated operations</p>
+
+  <!-- ===================================================================== -->
+  <!-- STUDENT LOGIN / UID GENERATION MODAL                                 -->
+  <!-- ===================================================================== -->
+  <div id="loginModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="card-surface max-w-md w-full p-6 space-y-5 shadow-2xl border-indigo-200 animate-in fade-in zoom-in duration-200">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
+            🎓
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900">Student Campus Login</h3>
+            <p class="text-xs text-slate-500">Enter College Roll No to generate your UID</p>
+          </div>
         </div>
-        <button onclick="closeBenchmarkModal()" class="text-slate-400 hover:text-white">
+        <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-700">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <div class="overflow-x-auto mb-4">
-        <table class="w-full text-xs text-left">
-          <thead class="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
-            <tr>
-              <th class="py-2.5 px-3">Configuration</th>
-              <th class="py-2.5 px-3">Queue MAE</th>
-              <th class="py-2.5 px-3">Queue RMSE</th>
-              <th class="py-2.5 px-3">90% CI Coverage</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-800/60 font-mono">
-            <tr>
-              <td class="py-2.5 px-3 font-sans font-medium text-slate-300">Baseline A (Naive Count / FIFO)</td>
-              <td class="py-2.5 px-3 text-rose-400">0.83</td>
-              <td class="py-2.5 px-3 text-rose-400">1.45</td>
-              <td class="py-2.5 px-3 text-slate-500">N/A</td>
-            </tr>
-            <tr>
-              <td class="py-2.5 px-3 font-sans font-medium text-slate-300">Baseline B (Workload without Filter)</td>
-              <td class="py-2.5 px-3 text-amber-400">0.76</td>
-              <td class="py-2.5 px-3 text-amber-400">1.14</td>
-              <td class="py-2.5 px-3 text-slate-500">N/A</td>
-            </tr>
-            <tr>
-              <td class="py-2.5 px-3 font-sans font-medium text-slate-300">Baseline C (Independent Stages)</td>
-              <td class="py-2.5 px-3 text-purple-400">1.33</td>
-              <td class="py-2.5 px-3 text-purple-400">2.07</td>
-              <td class="py-2.5 px-3 text-slate-500">N/A</td>
-            </tr>
-            <tr class="bg-emerald-950/30 text-emerald-300 font-bold">
-              <td class="py-2.5 px-3 font-sans">QueueFlux (Full Mathematical Model)</td>
-              <td class="py-2.5 px-3 text-emerald-400">1.16</td>
-              <td class="py-2.5 px-3 text-emerald-400">1.80</td>
-              <td class="py-2.5 px-3 text-cyan-300">76.7%</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Login Form -->
+      <div class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Student Full Name</label>
+          <input type="text" id="inputStudentName" placeholder="e.g. Alex Chen" value="Alex Chen" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">College Roll Number</label>
+          <input type="text" id="inputStudentRoll" placeholder="e.g. 24CS108 or 21EC042" value="24CS108" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold uppercase">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Department</label>
+          <select id="inputStudentDept" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+            <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+            <option value="Electronics & Communication">Electronics & Communication</option>
+            <option value="Artificial Intelligence & Data Science">AI & Data Science</option>
+            <option value="Mechanical Engineering">Mechanical Engineering</option>
+            <option value="Information Technology">Information Technology</option>
+          </select>
+        </div>
+
+        <!-- Quick Demo Student Presets -->
+        <div class="pt-1">
+          <span class="text-[10px] text-slate-400 font-semibold uppercase block mb-1.5">Quick Demo Students:</span>
+          <div class="flex flex-wrap gap-1.5">
+            <button onclick="fillDemoStudent('Alex Chen', '24CS108')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 font-medium text-[11px] text-slate-700">Alex Chen (24CS108)</button>
+            <button onclick="fillDemoStudent('Pooja Sundaram', '23EC041')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 font-medium text-[11px] text-slate-700">Pooja (23EC041)</button>
+            <button onclick="fillDemoStudent('Rohan Mehta', '22ME019')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 font-medium text-[11px] text-slate-700">Rohan (22ME019)</button>
+          </div>
+        </div>
       </div>
 
-      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs flex justify-between items-center text-slate-300">
-        <span>Waiting Time Reduction:</span>
-        <span class="text-sm font-bold text-emerald-400">24.6% reduction over baseline</span>
-      </div>
+      <button onclick="submitStudentLogin()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center space-x-2 cursor-pointer">
+        <i data-lucide="sparkles" class="w-4 h-4 text-emerald-300"></i>
+        <span>Generate Student UID & Enter App</span>
+      </button>
+
     </div>
   </div>
 
-  <!-- SCRIPT ENGINE -->
-  <script>
-    // Initialize Lucide Icons
-    lucide.createIcons();
 
-    // System State
-    const AppState = {
-      minute: 0,
-      isPlaying: false,
-      timerId: null,
-      speed: 1500, // ms per minute
-      condition: 'NORMAL',
-      billingCounters: 2,
-      kitchenStations: 3,
-      history: [],
-      // Client-side fallback state
-      sim: {
-        qb: 0, qk: 0, wb: 0.0, wk: 0.0,
-        est_qb: 0.0, est_qk: 0.0,
-        ci_qb: [0, 0], ci_qk: [0, 0]
-      }
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT APPLICATION CORE LOGIC                                     -->
+  <!-- ===================================================================== -->
+  <script>
+    // --- Application State ---
+    let currentUser = {
+      name: 'Alex Chen',
+      roll_no: '24CS108',
+      uid: 'STU-24CS108-8421',
+      department: 'Computer Science',
+      role: 'STUDENT',
+      avatar: '🎓'
     };
 
-    // Chart.js Instances
-    let historyChart = null;
+    // Live Billing Telemetry State
+    let billingState = {
+      queue_length: 4,
+      active_counters: 2,
+      avg_service_time: 1.2,
+      arrival_rate: 3.5,
+      disruption_mode: 'NORMAL'
+    };
+
+    let currentView = 'student';
+    let menuItems = [
+      { id: 'item_bev_1', name: '☕ South Indian Filter Coffee', category: 'BEVERAGE', price: 25.0, base_prep_time_min: 1.2, description: 'Freshly brewed chicory coffee. 1-min pickup.' },
+      { id: 'item_snk_1', name: '🥪 Grilled Veg Cheese Sandwich', category: 'SNACK', price: 60.0, base_prep_time_min: 2.5, description: 'Toasted multigrain bread with vegetables and cheese.' },
+      { id: 'item_meal_1', name: '🍱 Executive Lunch Thali', category: 'MEAL', price: 95.0, base_prep_time_min: 5.0, description: 'Basmati rice, paneer butter masala, dal fry & 2 rotis.' },
+      { id: 'item_combo_1', name: '🍛 Campus Rush Hour Combo Box', category: 'COMBO', price: 120.0, base_prep_time_min: 7.5, description: 'Full lunch box with samosa snack and cold beverage.' }
+    ];
+    let cart = { 'item_meal_1': 1 };
+    let activeTicket = null;
+    let ticketCountdownSec = 512;
     let forecastChart = null;
 
-    // Initialize Charts
-    function initCharts() {
-      // 1. History Chart
-      const ctxH = document.getElementById('queueHistoryChart').getContext('2d');
-      historyChart = new Chart(ctxH, {
+    // In-memory staff orders store for immediate responsive demo
+    let staffOrders = [
+      { order_id: 'ORD-4011', student_name: 'Pooja Sundaram', roll_no: '23EC041', uid: 'STU-23EC041-3912', item_summary: '🍱 Thali (1)', status: 'WAITING_BILLING', total_wait_min: 8.5 },
+      { order_id: 'ORD-4012', student_name: 'Rohan Mehta', roll_no: '22ME019', uid: 'STU-22ME019-8172', item_summary: '🥪 Sandwich (1)', status: 'PREPARING', total_wait_min: 5.2 },
+      { order_id: 'ORD-4013', student_name: 'Deepak Rao', roll_no: '24CS088', uid: 'STU-24CS088-1294', item_summary: '☕ Coffee (2)', status: 'READY', total_wait_min: 2.0 }
+    ];
+
+    // --- Lifecycle Initialization ---
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      setInterval(updateLiveClock, 1000);
+      updateLiveClock();
+
+      // Load user from localStorage if saved
+      const savedUser = localStorage.getItem('queueflux_student');
+      if (savedUser) {
+        try { currentUser = JSON.parse(savedUser); } catch(e){}
+      }
+      updateUserUI();
+
+      renderMenu();
+      recomputeRealTimeWait();
+      initChart();
+      updateStaffOrdersUI();
+
+      // Countdown ticker for active order ticket
+      setInterval(() => {
+        if (activeTicket && ticketCountdownSec > 0) {
+          ticketCountdownSec--;
+          const mins = Math.floor(ticketCountdownSec / 60);
+          const secs = ticketCountdownSec % 60;
+          const display = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+          const el = document.getElementById('ticketCountdown');
+          if (el) el.textContent = display;
+        }
+      }, 1000);
+
+      // Background telemetry sync (every 5 seconds)
+      setInterval(syncTelemetryWithServer, 5000);
+    });
+
+    function updateLiveClock() {
+      const now = new Date();
+      document.getElementById('liveClock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    // --- Authentication & UID Generation ---
+    function openLoginModal() {
+      document.getElementById('loginModal').classList.remove('hidden');
+    }
+
+    function closeLoginModal() {
+      document.getElementById('loginModal').classList.add('hidden');
+    }
+
+    function fillDemoStudent(name, roll) {
+      document.getElementById('inputStudentName').value = name;
+      document.getElementById('inputStudentRoll').value = roll;
+    }
+
+    async function submitStudentLogin() {
+      const name = document.getElementById('inputStudentName').value.trim();
+      const roll = document.getElementById('inputStudentRoll').value.trim().toUpperCase();
+      const dept = document.getElementById('inputStudentDept').value;
+
+      if (!name || !roll) {
+        alert("Please enter both Name and College Roll Number.");
+        return;
+      }
+
+      // Generate UID
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const generatedUid = `STU-${roll}-${randomSuffix}`;
+
+      currentUser = {
+        name: name,
+        roll_no: roll,
+        uid: generatedUid,
+        department: dept,
+        role: 'STUDENT',
+        avatar: '🎓'
+      };
+
+      // Try registering on backend (non-blocking)
+      try {
+        fetch('/api/auth/register-student', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roll_no: roll, name: name, department: dept })
+        });
+      } catch(e){}
+
+      localStorage.setItem('queueflux_student', JSON.stringify(currentUser));
+      updateUserUI();
+      closeLoginModal();
+    }
+
+    function updateUserUI() {
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userRollBadge').textContent = currentUser.roll_no;
+      document.getElementById('userUidBadge').textContent = `UID: ${currentUser.uid}`;
+      document.getElementById('userAvatar').textContent = currentUser.avatar || '🎓';
+    }
+
+    // --- View Switcher ---
+    function switchView(view) {
+      currentView = view;
+      document.getElementById('viewStudent').classList.add('hidden');
+      document.getElementById('viewStaff').classList.add('hidden');
+      document.getElementById('viewManager').classList.add('hidden');
+
+      document.getElementById('navStudent').className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center space-x-1.5";
+      document.getElementById('navStaff').className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center space-x-1.5";
+      document.getElementById('navManager').className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center space-x-1.5";
+
+      if (view === 'student') {
+        document.getElementById('viewStudent').classList.remove('hidden');
+        document.getElementById('navStudent').className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-white text-indigo-700 shadow-xs flex items-center space-x-1.5";
+        recomputeRealTimeWait();
+      } else if (view === 'staff') {
+        document.getElementById('viewStaff').classList.remove('hidden');
+        document.getElementById('navStaff').className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-white text-indigo-700 shadow-xs flex items-center space-x-1.5";
+        updateStaffOrdersUI();
+      } else if (view === 'manager') {
+        document.getElementById('viewManager').classList.remove('hidden');
+        document.getElementById('navManager').className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-white text-indigo-700 shadow-xs flex items-center space-x-1.5";
+        updateManagerView();
+      }
+      lucide.createIcons();
+    }
+
+    // --- Real-Time Billing & Wait Calculation Engine ---
+    function recomputeRealTimeWait() {
+      const q = billingState.queue_length;
+      const c = billingState.active_counters;
+      const st = billingState.avg_service_time;
+
+      // Rate: cust/min
+      const serviceRatePerCounter = 1.0 / Math.max(0.2, st);
+      const totalThroughput = c * serviceRatePerCounter;
+
+      // Billing wait formula: (Queue Ahead + 1) / (Active Counters * Service Rate)
+      const billingWaitMin = (q + 1) / Math.max(0.1, totalThroughput);
+
+      // Kitchen prep calculation based on cart items
+      let maxPrep = 0;
+      let totalQty = 0;
+      for (const [id, qty] of Object.entries(cart)) {
+        if (qty > 0) {
+          const itm = menuItems.find(m => m.id === id);
+          if (itm) {
+            maxPrep = Math.max(maxPrep, itm.base_prep_time_min);
+            totalQty += qty;
+          }
+        }
+      }
+      if (totalQty === 0) { maxPrep = 5.0; totalQty = 1; }
+      const batchFactor = 1.0 + 0.15 * Math.max(0, totalQty - 1);
+      const kitchenWaitMin = maxPrep * batchFactor;
+
+      const totalWaitMin = billingWaitMin + kitchenWaitMin;
+
+      // Update UI elements
+      document.getElementById('heroBillingWait').textContent = `~${billingWaitMin.toFixed(1)} mins`;
+      document.getElementById('heroQueuePos').textContent = `#${q + 1} in line`;
+      document.getElementById('heroCounterNum').textContent = `Billing Counter #${(q % c) + 1}`;
+      document.getElementById('heroQueueLength').textContent = q;
+      document.getElementById('heroActiveCounters').textContent = c;
+      document.getElementById('heroServiceSpeed').textContent = st.toFixed(1);
+      document.getElementById('heroThroughput').textContent = totalThroughput.toFixed(2);
+      document.getElementById('heroFormulaDisplay').textContent = `(${q} queue + 1) ÷ (${c} cnt × ${serviceRatePerCounter.toFixed(2)} serv/min) = ${billingWaitMin.toFixed(1)} mins`;
+
+      // Breakdown Card
+      document.getElementById('estBillingWait').textContent = `${billingWaitMin.toFixed(1)} mins`;
+      document.getElementById('estKitchenPrep').textContent = `${kitchenWaitMin.toFixed(1)} mins`;
+      document.getElementById('estTotalWaitDisplay').textContent = `~${totalWaitMin.toFixed(1)} mins`;
+
+      // Expected Ready Clock Time
+      const now = new Date();
+      now.setSeconds(now.getSeconds() + Math.round(totalWaitMin * 60));
+      document.getElementById('estReadyTimeDisplay').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Simulator sync
+      document.getElementById('sliderQueueVal').textContent = q;
+      document.getElementById('simQueueSlider').value = q;
+
+      // Congestion Badges
+      const badge = document.getElementById('billingStatusBadge');
+      const estBadge = document.getElementById('estCongestionBadge');
+      if (q > 8) {
+        badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30";
+        badge.textContent = "🔴 RUSH CONGESTION SURGE";
+        estBadge.className = "text-xs font-bold px-2 py-0.5 rounded-full badge-critical";
+        estBadge.textContent = "Rush Surge";
+      } else if (q > 4) {
+        badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30";
+        badge.textContent = "🟡 MODERATE QUEUE FLOW";
+        estBadge.className = "text-xs font-bold px-2 py-0.5 rounded-full badge-warning";
+        estBadge.textContent = "Moderate Flow";
+      } else {
+        badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30";
+        badge.textContent = "🟢 NORMAL CHECKOUT FLOW";
+        estBadge.className = "text-xs font-bold px-2 py-0.5 rounded-full badge-normal";
+        estBadge.textContent = "Normal Flow";
+      }
+    }
+
+    // --- Interactive Billing Inputs Tester ---
+    function toggleBillingSimulator() {
+      const widget = document.getElementById('billingSimulatorWidget');
+      widget.classList.toggle('hidden');
+      lucide.createIcons();
+    }
+
+    function onSimulatorChange() {
+      billingState.queue_length = parseInt(document.getElementById('simQueueSlider').value, 10);
+      recomputeRealTimeWait();
+    }
+
+    function setSimCounters(cnt) {
+      billingState.active_counters = cnt;
+      [1, 2, 3, 4].forEach(i => {
+        const btn = document.getElementById(`btnSimCnt${i}`);
+        if (i === cnt) {
+          btn.className = "flex-1 py-1 rounded bg-indigo-600 text-white font-bold";
+        } else {
+          btn.className = "flex-1 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 font-bold hover:bg-slate-700";
+        }
+      });
+      recomputeRealTimeWait();
+    }
+
+    function adjustSimQueue(delta) {
+      billingState.queue_length = Math.max(0, billingState.queue_length + delta);
+      recomputeRealTimeWait();
+    }
+
+    // --- Food Menu Logic ---
+    function renderMenu() {
+      const container = document.getElementById('menuGrid');
+      container.innerHTML = menuItems.map(item => {
+        const qty = cart[item.id] || 0;
+        return `
+          <div class="card-surface p-4 flex flex-col justify-between border-slate-200">
+            <div>
+              <div class="flex justify-between items-start">
+                <h4 class="font-bold text-sm text-slate-900">${item.name}</h4>
+                <span class="text-xs font-bold text-indigo-600 font-mono">₹${item.price}</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">${item.description}</p>
+              <div class="mt-2.5 flex items-center space-x-1 text-[11px] text-slate-600 font-medium">
+                <i data-lucide="timer" class="w-3.5 h-3.5 text-amber-500"></i>
+                <span>Base Prep: ~${item.base_prep_time_min} mins</span>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+              <span class="text-xs font-semibold text-slate-500">Quantity</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="updateQty('${item.id}', -1)" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">-</button>
+                <span class="font-bold text-sm w-4 text-center text-slate-900">${qty}</span>
+                <button onclick="updateQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function updateQty(id, delta) {
+      cart[id] = Math.max(0, (cart[id] || 0) + delta);
+      renderMenu();
+      recomputeRealTimeWait();
+    }
+
+    // --- Order Confirmation & Digital Token ---
+    function submitConsumerOrder() {
+      const itemsSelected = Object.entries(cart).filter(([_, q]) => q > 0);
+      if (itemsSelected.length === 0) {
+        alert("Please select at least 1 food item before generating token.");
+        return;
+      }
+
+      const tokenNum = Math.floor(100 + Math.random() * 900);
+      const orderId = `ORD-${Math.floor(4000 + Math.random() * 900)}`;
+      const assignedCounter = (billingState.queue_length % billingState.active_counters) + 1;
+
+      activeTicket = {
+        order_id: orderId,
+        token_num: `#TOKEN-${currentUser.roll_no}-${tokenNum}`,
+        student_name: currentUser.name,
+        roll_no: currentUser.roll_no,
+        uid: currentUser.uid,
+        counter_assigned: assignedCounter,
+        status: 'WAITING_BILLING',
+        status_step: 1
+      };
+
+      // Increment live queue backlog
+      billingState.queue_length += 1;
+      recomputeRealTimeWait();
+
+      // Display active ticket
+      document.getElementById('ticketOrderId').textContent = activeTicket.token_num;
+      document.getElementById('ticketStudentName').textContent = currentUser.name;
+      document.getElementById('ticketStudentUid').textContent = `UID: ${currentUser.uid}`;
+      document.getElementById('ticketCounter').textContent = `Counter #${assignedCounter}`;
+      document.getElementById('ticketStatusBadge').textContent = '1. In Billing Queue';
+      document.getElementById('ticketProgressBar').style.width = '25%';
+      document.getElementById('activeTicketContainer').classList.remove('hidden');
+
+      ticketCountdownSec = Math.round(parseFloat(document.getElementById('estTotalWaitDisplay').textContent.replace(/[^\d.]/g, '')) * 60);
+
+      // Add to Staff Console store
+      staffOrders.unshift({
+        order_id: orderId,
+        student_name: currentUser.name,
+        roll_no: currentUser.roll_no,
+        uid: currentUser.uid,
+        item_summary: `Meal Order (${itemsSelected.length} items)`,
+        status: 'WAITING_BILLING',
+        total_wait_min: (ticketCountdownSec / 60).toFixed(1)
+      });
+      updateStaffOrdersUI();
+
+      // Non-blocking server push
+      try {
+        fetch('/api/consumer/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_id: currentUser.uid,
+            student_name: currentUser.name,
+            items: itemsSelected.map(([id, q]) => ({
+              item_id: id,
+              name: menuItems.find(m => m.id === id).name,
+              category: menuItems.find(m => m.id === id).category,
+              quantity: q,
+              base_prep_time_min: menuItems.find(m => m.id === id).base_prep_time_min,
+              price: menuItems.find(m => m.id === id).price
+            }))
+          })
+        });
+      } catch(e){}
+
+      lucide.createIcons();
+    }
+
+    function advanceActiveTicketDemo() {
+      if (!activeTicket) return;
+      activeTicket.status_step = (activeTicket.status_step % 4) + 1;
+      const bar = document.getElementById('ticketProgressBar');
+      const badge = document.getElementById('ticketStatusBadge');
+
+      if (activeTicket.status_step === 1) {
+        bar.style.width = '25%';
+        badge.textContent = '1. In Billing Queue';
+      } else if (activeTicket.status_step === 2) {
+        bar.style.width = '50%';
+        badge.textContent = '2. At Billing Counter';
+        billingState.queue_length = Math.max(0, billingState.queue_length - 1);
+        recomputeRealTimeWait();
+      } else if (activeTicket.status_step === 3) {
+        bar.style.width = '75%';
+        badge.textContent = '3. Cooking in Kitchen';
+      } else if (activeTicket.status_step === 4) {
+        bar.style.width = '100%';
+        badge.textContent = '4. Ready for Pickup! 🔔';
+        badge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-600 text-white animate-pulse';
+        alert(`🔔 Buzzer: Order ${activeTicket.token_num} is ready for pickup at Counter #${activeTicket.counter_assigned}!`);
+      }
+    }
+
+    // --- Staff Console POS Actions ---
+    function staffServeNextCustomer() {
+      billingState.queue_length = Math.max(0, billingState.queue_length - 1);
+      recomputeRealTimeWait();
+      // Advance first waiting order
+      const waiting = staffOrders.find(o => o.status === 'WAITING_BILLING');
+      if (waiting) {
+        waiting.status = 'PREPARING';
+        updateStaffOrdersUI();
+      }
+    }
+
+    function staffAddCustomer() {
+      billingState.queue_length += 1;
+      recomputeRealTimeWait();
+    }
+
+    function advanceStaffOrder(orderId) {
+      const order = staffOrders.find(o => o.order_id === orderId);
+      if (!order) return;
+      if (order.status === 'WAITING_BILLING') {
+        order.status = 'PREPARING';
+      } else if (order.status === 'PREPARING') {
+        order.status = 'READY';
+      } else if (order.status === 'READY') {
+        staffOrders = staffOrders.filter(o => o.order_id !== orderId);
+      }
+      updateStaffOrdersUI();
+    }
+
+    function updateStaffOrdersUI() {
+      const billingList = document.getElementById('staffBillingOrdersList');
+      const kitchenList = document.getElementById('staffKitchenOrdersList');
+      const readyList = document.getElementById('staffReadyOrdersList');
+
+      const billing = staffOrders.filter(o => o.status === 'WAITING_BILLING');
+      const kitchen = staffOrders.filter(o => o.status === 'PREPARING');
+      const ready = staffOrders.filter(o => o.status === 'READY');
+
+      document.getElementById('staffCountBilling').textContent = billing.length;
+      document.getElementById('staffCountKitchen').textContent = kitchen.length;
+      document.getElementById('staffCountReady').textContent = ready.length;
+
+      billingList.innerHTML = billing.map(o => `
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex justify-between items-center">
+          <div>
+            <div class="font-bold text-slate-900">${o.student_name} <span class="font-mono text-indigo-600 font-bold">(${o.roll_no})</span></div>
+            <div class="text-[10px] text-slate-500 font-mono">${o.uid} • ${o.item_summary}</div>
+          </div>
+          <button onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-[11px]">Billed -> Cook</button>
+        </div>
+      `).join('') || `<p class="text-slate-400 text-xs italic py-2">No students waiting at billing.</p>`;
+
+      kitchenList.innerHTML = kitchen.map(o => `
+        <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-200 text-xs flex justify-between items-center">
+          <div>
+            <div class="font-bold text-slate-900">${o.student_name} <span class="font-mono text-amber-700 font-bold">(${o.roll_no})</span></div>
+            <div class="text-[10px] text-slate-500 font-mono">${o.item_summary}</div>
+          </div>
+          <button onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-[11px]">Cooked -> Bell 🔔</button>
+        </div>
+      `).join('') || `<p class="text-slate-400 text-xs italic py-2">Kitchen queue clear.</p>`;
+
+      readyList.innerHTML = ready.map(o => `
+        <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs flex justify-between items-center">
+          <div>
+            <div class="font-bold text-slate-900">${o.student_name} <span class="font-mono text-emerald-700 font-bold">(${o.roll_no})</span></div>
+            <div class="text-[10px] text-slate-500 font-mono">Buzzer Ringing</div>
+          </div>
+          <button onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold text-[11px]">Picked Up ✓</button>
+        </div>
+      `).join('') || `<p class="text-slate-400 text-xs italic py-2">No food pending pickup.</p>`;
+    }
+
+    // --- AI Control Tower & Chart ---
+    function initChart() {
+      const ctx = document.getElementById('chartForecast5Min').getContext('2d');
+      forecastChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: [],
+          labels: ['t+0', 't+1 min', 't+2 min', 't+3 min', 't+4 min', 't+5 min'],
           datasets: [
             {
-              label: 'Actual Billing (Q^B)',
-              data: [],
-              borderColor: '#06b6d4',
-              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+              label: 'Person 1 ML Prediction',
+              data: [4, 5, 6, 7, 6, 5],
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79, 70, 229, 0.08)',
               borderWidth: 2.5,
-              tension: 0.35,
-              fill: false
+              tension: 0.3,
+              fill: true
             },
             {
-              label: 'Estimated Billing (PF)',
-              data: [],
-              borderColor: '#f59e0b',
-              borderDash: [4, 4],
-              borderWidth: 2,
-              tension: 0.35,
-              fill: false
-            },
-            {
-              label: 'Actual Kitchen (Q^K)',
-              data: [],
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              borderWidth: 2.5,
-              tension: 0.35,
-              fill: false
-            },
-            {
-              label: 'Estimated Kitchen (PF)',
-              data: [],
-              borderColor: '#f43f5e',
-              borderDash: [4, 4],
-              borderWidth: 2,
-              tension: 0.35,
-              fill: false
+              label: 'Moving Avg Baseline',
+              data: [4, 4.2, 4.5, 4.8, 5.0, 5.2],
+              borderColor: '#94a3b8',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              tension: 0.2
             }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { labels: { color: '#94a3b8', font: { size: 10 } } }
-          },
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } },
           scales: {
-            x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(51, 65, 85, 0.3)' } },
-            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(51, 65, 85, 0.3)' }, beginAtZero: true }
-          }
-        }
-      });
-
-      // 2. Forecast Chart
-      const ctxF = document.getElementById('forecastChart').getContext('2d');
-      forecastChart = new Chart(ctxF, {
-        type: 'bar',
-        data: {
-          labels: ['Billing (Q_{t+5}^B)', 'Kitchen (Q_{t+5}^K)', 'Combined Backlog'],
-          datasets: [{
-            label: 'Median Forecast (t+5m)',
-            data: [0, 0, 0],
-            backgroundColor: ['#06b6d4', '#10b981', '#f59e0b'],
-            borderRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
-            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(51, 65, 85, 0.3)' }, beginAtZero: true }
+            y: { title: { display: true, text: 'Queue Length (Persons)', font: { size: 10 } }, min: 0 }
           }
         }
       });
     }
 
-    // Step Simulator
-    async function stepSimulation() {
-      try {
-        // Try calling the FastAPI server first
-        const resp = await fetch('/api/step', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ step_minutes: 1.0, bottleneck_threshold: 15 })
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          renderStepData(data);
-          document.getElementById('connectionText').innerText = 'Connected: FastAPI Backend';
-          return;
-        }
-      } catch (err) {
-        // If API offline, execute exact mathematical model in JS directly
-      }
-      runClientSideMathStep();
-    }
-
-    // Client-side mathematical simulation fallback
-    function runClientSideMathStep() {
-      AppState.minute += 1;
-      const m = AppState.minute;
-
-      // Diurnal arrival rate
-      const baseLam = 1.0 + 2.5 * Math.exp(-Math.pow(m - 45.0, 2) / (2 * Math.pow(15.0, 2)));
-      const surgeMult = AppState.condition === 'DEMAND_SURGE' ? 2.2 : 1.0;
-      const lam = baseLam * surgeMult;
-      const arrivals = poissonSample(lam);
-
-      // Service capacities
-      const slowB = AppState.condition === 'BILLING_SLOWDOWN' ? 0.55 : 1.33;
-      const slowK = AppState.condition === 'KITCHEN_SLOWDOWN' ? 0.16 : 0.33;
-      const actB = AppState.condition === 'RESOURCE_FAILURE' ? Math.max(1, AppState.billingCounters - 1) : AppState.billingCounters;
-      const actK = AppState.kitchenStations;
-
-      const capB = poissonSample(actB * slowB);
-      const bDone = Math.min(AppState.sim.qb + arrivals, capB);
-      AppState.sim.qb = Math.max(0, AppState.sim.qb + arrivals - bDone);
-
-      const capK = poissonSample(actK * slowK);
-      const kDone = Math.min(AppState.sim.qk + bDone, capK);
-      AppState.sim.qk = Math.max(0, AppState.sim.qk + bDone - kDone);
-
-      AppState.sim.wb = AppState.sim.qb * 0.75;
-      AppState.sim.wk = AppState.sim.qk * 3.2;
-
-      // Filter estimate with noise
-      AppState.sim.est_qb = Math.max(0, AppState.sim.qb + (Math.random() * 1.4 - 0.7));
-      AppState.sim.est_qk = Math.max(0, AppState.sim.qk + (Math.random() * 2.0 - 1.0));
-      AppState.sim.ci_qb = [Math.max(0, Math.floor(AppState.sim.est_qb * 0.8)), Math.ceil(AppState.sim.est_qb * 1.25) + 1];
-      AppState.sim.ci_qk = [Math.max(0, Math.floor(AppState.sim.est_qk * 0.8)), Math.ceil(AppState.sim.est_qk * 1.25) + 2];
-
-      const mealWait = (AppState.sim.wb / actB) + 0.75 + (AppState.sim.wk / actK) + 5.0;
-      const bevWait = (AppState.sim.wb / actB) + 0.75 + ((AppState.sim.wk * 0.4) / actK) + 1.2;
-
-      // 5-min forecast
-      const fcQb = Math.max(0, Math.round(AppState.sim.est_qb + (lam - actB * slowB) * 3));
-      const fcQk = Math.max(0, Math.round(AppState.sim.est_qk + (bDone - actK * slowK) * 3));
-      const bottleneckProb = Math.min(1.0, Math.max(0.02, (fcQb + fcQk) / 25.0));
-
-      // Optimizer recommendation
-      let rec = 'NO_ACTION';
-      let stab = 0.95;
-      let saving = 0.0;
-      if (AppState.sim.qb > 6) {
-        rec = 'OPEN_BILLING_COUNTER';
-        stab = 0.88;
-        saving = 28.4;
-      } else if (AppState.sim.qk > 10) {
-        rec = 'OPEN_KITCHEN_RESOURCE';
-        stab = 0.82;
-        saving = 24.1;
-      }
-
-      renderStepData({
-        minute: m,
-        ground_truth: {
-          q_billing: AppState.sim.qb,
-          q_kitchen: AppState.sim.qk,
-          w_billing: AppState.sim.wb,
-          w_kitchen: AppState.sim.wk,
-          active_billing: actB,
-          active_kitchen: actK,
-          condition: AppState.condition
-        },
-        estimated: {
-          q_billing: AppState.sim.est_qb,
-          q_kitchen: AppState.sim.est_qk,
-          q_billing_ci: AppState.sim.ci_qb,
-          q_kitchen_ci: AppState.sim.ci_qk
-        },
-        waiting_times: {
-          MEAL: mealWait,
-          BEVERAGE: bevWait,
-          meal_range: [Math.max(2, mealWait - 2.5), mealWait + 3.2]
-        },
-        forecast_5min: {
-          median_q_billing: fcQb,
-          median_q_kitchen: fcQk,
-          expected_combined_backlog: fcQb + fcQk,
-          bottleneck_probability: bottleneckProb
-        },
-        recommendation: {
-          recommended_action: rec,
-          decision_stability: stab,
-          cost_reduction_percent: saving,
-          expected_cost: (mealWait * 0.8).toFixed(1)
-        }
-      });
-    }
-
-    function poissonSample(lambda) {
-      let l = Math.exp(-lambda);
-      let k = 0;
-      let p = 1.0;
-      do {
-        k++;
-        p *= Math.random();
-      } while (p > l);
-      return k - 1;
-    }
-
-    // Render Data into DOM & Charts
-    function renderStepData(data) {
-      const gt = data.ground_truth;
-      const est = data.estimated;
-      const wt = data.waiting_times;
-      const fc = data.forecast_5min;
-      const rec = data.recommendation;
-
-      // Update Ticker
-      document.getElementById('clockDisplay').innerText = `${String(data.minute).padStart(2, '0')}:00 min`;
-
-      // Update HUD Numbers
-      document.getElementById('hudBillingCount').innerText = gt.q_billing;
-      document.getElementById('hudBillingEst').innerText = `${est.q_billing.toFixed(1)} [90% CI: ${est.q_billing_ci[0]}-${est.q_billing_ci[1]}]`;
-      document.getElementById('hudBillingWorkload').innerText = `${gt.w_billing.toFixed(1)} min`;
-
-      document.getElementById('hudKitchenCount').innerText = gt.q_kitchen;
-      document.getElementById('hudKitchenEst').innerText = `${est.q_kitchen.toFixed(1)} [90% CI: ${est.q_kitchen_ci[0]}-${est.q_kitchen_ci[1]}]`;
-      document.getElementById('hudKitchenWorkload').innerText = `${gt.w_kitchen.toFixed(1)} min`;
-
-      document.getElementById('hudMealWait').innerText = wt.MEAL.toFixed(1);
-      document.getElementById('hudWaitRange').innerText = `${wt.meal_range[0].toFixed(1)} - ${wt.meal_range[1].toFixed(1)} min`;
-      document.getElementById('hudBevWait').innerText = `~${wt.BEVERAGE.toFixed(1)} min`;
-
-      const probPct = (fc.bottleneck_probability * 100).toFixed(1);
-      const probElem = document.getElementById('hudBottleneckProb');
-      probElem.innerText = `${probPct}%`;
-      probElem.className = probPct < 30 ? 'text-3xl font-extrabold text-emerald-400' : (probPct < 70 ? 'text-3xl font-extrabold text-amber-400' : 'text-3xl font-extrabold text-rose-400');
-      document.getElementById('hudFutureBacklog').innerText = `Median ~${fc.expected_combined_backlog.toFixed(0)} orders`;
-
-      // Visual Canteen Pipeline Update
-      updateVisualPipeline(gt);
-
-      // Recommendation Card Update
-      document.getElementById('recActionTitle').innerText = rec.recommended_action;
-      document.getElementById('recStabilityBadge').innerText = `Stability: ${(rec.decision_stability * 100).toFixed(0)}%`;
-      document.getElementById('recWaitSaving').innerText = `+${rec.cost_reduction_percent}% reduction`;
-      document.getElementById('recObjectiveCost').innerText = `J = ${rec.expected_cost} units`;
-
-      // Update History Chart
-      if (historyChart) {
-        historyChart.data.labels.push(`${data.minute}m`);
-        historyChart.data.datasets[0].data.push(gt.q_billing);
-        historyChart.data.datasets[1].data.push(est.q_billing);
-        historyChart.data.datasets[2].data.push(gt.q_kitchen);
-        historyChart.data.datasets[3].data.push(est.q_kitchen);
-
-        if (historyChart.data.labels.length > 25) {
-          historyChart.data.labels.shift();
-          historyChart.data.datasets.forEach(d => d.data.shift());
-        }
-        historyChart.update();
-      }
-
-      // Update Forecast Chart
+    function updateManagerView() {
+      // Update Chart based on current queue
       if (forecastChart) {
-        forecastChart.data.datasets[0].data = [
-          fc.median_q_billing,
-          fc.median_q_kitchen,
-          fc.expected_combined_backlog
-        ];
+        const q = billingState.queue_length;
+        forecastChart.data.datasets[0].data = [q, q + 1, q + 2, q + 2, q + 1, q];
+        forecastChart.data.datasets[1].data = [q, q + 0.3, q + 0.6, q + 0.9, q + 1.2, q + 1.4];
         forecastChart.update();
       }
-    }
 
-    // Dynamic Visual Pipeline
-    function updateVisualPipeline(gt) {
-      // 1. Billing queue dots
-      const bLane = document.getElementById('billingQueueLane');
-      bLane.innerHTML = '';
-      if (gt.q_billing === 0) {
-        bLane.innerHTML = '<span class="text-xs text-slate-600 italic">Queue Empty</span>';
-      } else {
-        const dotsToShow = Math.min(gt.q_billing, 16);
-        for (let i = 0; i < dotsToShow; i++) {
-          const dot = document.createElement('div');
-          dot.className = 'w-6 h-6 rounded-full bg-cyan-500/80 border border-cyan-300 flex items-center justify-center text-[10px] font-bold text-slate-950 flex-shrink-0 animate-pulse';
-          dot.innerText = i + 1;
-          bLane.appendChild(dot);
-        }
-        if (gt.q_billing > 16) {
-          const extra = document.createElement('span');
-          extra.className = 'text-xs text-cyan-400 font-bold ml-1';
-          extra.innerText = `+${gt.q_billing - 16}`;
-          bLane.appendChild(extra);
-        }
-      }
-      document.getElementById('visualBillingCountText').innerText = `${gt.q_billing} in queue`;
-
-      // 2. Billing Counters Grid
-      const bGrid = document.getElementById('billingCountersGrid');
-      bGrid.innerHTML = '';
-      for (let c = 1; c <= AppState.billingCounters; c++) {
-        const card = document.createElement('div');
-        const isBusy = gt.q_billing > 0 || Math.random() < 0.6;
-        card.className = `p-2.5 rounded-lg border text-xs ${isBusy ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200' : 'bg-slate-950 border-slate-800 text-slate-400'}`;
-        card.innerHTML = `
-          <div class="flex justify-between items-center font-bold">
-            <span>Counter ${c}</span>
-            <span class="w-2 h-2 rounded-full ${isBusy ? 'bg-cyan-400 animate-ping' : 'bg-slate-600'}"></span>
-          </div>
-          <p class="text-[10px] mt-1 text-slate-400">${isBusy ? 'Processing Order...' : 'Idle (Ready)'}</p>
+      // Populate history table
+      const tbody = document.getElementById('dbHistoryBody');
+      const now = new Date();
+      tbody.innerHTML = [0, 1, 2, 3, 4].map(i => {
+        const d = new Date(now.getTime() - i * 60000);
+        return `
+          <tr>
+            <td class="py-2 px-3 text-slate-500">${d.toLocaleTimeString()}</td>
+            <td class="py-2 px-3">${billingState.arrival_rate} /m</td>
+            <td class="py-2 px-3">${(billingState.active_counters / billingState.avg_service_time).toFixed(2)} /m</td>
+            <td class="py-2 px-3 font-bold">${billingState.queue_length}</td>
+            <td class="py-2 px-3">${billingState.active_counters}</td>
+            <td class="py-2 px-3">${billingState.avg_service_time} m</td>
+            <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${billingState.queue_length > 7 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">${billingState.queue_length > 7 ? 'SURGE' : 'STABLE'}</span></td>
+          </tr>
         `;
-        bGrid.appendChild(card);
-      }
-
-      // 3. Kitchen queue lane
-      const kLane = document.getElementById('kitchenQueueLane');
-      kLane.innerHTML = '';
-      if (gt.q_kitchen === 0) {
-        kLane.innerHTML = '<span class="text-xs text-slate-600 italic">No Backlog Orders</span>';
-      } else {
-        const icons = ['🥤', '🥪', '🍛', '🍱'];
-        const ordersToShow = Math.min(gt.q_kitchen, 14);
-        for (let i = 0; i < ordersToShow; i++) {
-          const t = document.createElement('div');
-          t.className = 'px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/50 text-xs flex-shrink-0';
-          t.innerText = icons[i % icons.length];
-          kLane.appendChild(t);
-        }
-        if (gt.q_kitchen > 14) {
-          const extra = document.createElement('span');
-          extra.className = 'text-xs text-emerald-400 font-bold ml-1';
-          extra.innerText = `+${gt.q_kitchen - 14}`;
-          kLane.appendChild(extra);
-        }
-      }
-      document.getElementById('visualKitchenCountText').innerText = `${gt.q_kitchen} in kitchen`;
-
-      // 4. Kitchen Stations Grid
-      const kGrid = document.getElementById('kitchenStationsGrid');
-      kGrid.innerHTML = '';
-      for (let s = 1; s <= AppState.kitchenStations; s++) {
-        const card = document.createElement('div');
-        const isCooking = gt.q_kitchen > 0 || Math.random() < 0.7;
-        card.className = `p-2 rounded-lg border text-xs ${isCooking ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200' : 'bg-slate-950 border-slate-800 text-slate-400'}`;
-        card.innerHTML = `
-          <div class="flex justify-between items-center font-bold">
-            <span>Chef ${s}</span>
-            <span class="w-2 h-2 rounded-full ${isCooking ? 'bg-emerald-400' : 'bg-slate-600'}"></span>
-          </div>
-          <p class="text-[10px] mt-1 text-slate-400">${isCooking ? '🍳 Cooking' : 'Idle'}</p>
-        `;
-        kGrid.appendChild(card);
-      }
+      }).join('');
     }
 
-    // Set Operating Condition
-    async function setCondition(cond) {
-      AppState.condition = cond;
-      const bText = document.getElementById('statusText');
-      const badge = document.getElementById('statusBadge');
+    function triggerDisruption(type) {
+      billingState.disruption_mode = type;
+      const rec = document.getElementById('mgrRecAction');
+      const exp = document.getElementById('mgrActionExplain');
+      const sav = document.getElementById('mgrSavingsPct');
+      const badge = document.getElementById('mgrCauseBadge');
 
-      if (cond === 'NORMAL') {
-        bText.innerText = 'Status: Normal Flow';
-        badge.className = 'flex items-center space-x-2 px-3.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/30 text-emerald-400 text-xs font-bold uppercase tracking-wider';
-      } else if (cond === 'DEMAND_SURGE') {
-        bText.innerText = 'Status: Demand Surge (+120%)';
-        badge.className = 'flex items-center space-x-2 px-3.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-950/30 text-amber-400 text-xs font-bold uppercase tracking-wider';
+      if (type === 'HIGH_DEMAND') {
+        billingState.queue_length = 12;
+        badge.textContent = 'HIGH_DEMAND';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800';
+        rec.textContent = 'OPEN_EXTRA_BILLING_COUNTER';
+        exp.textContent = 'Sudden customer arrival surge detected. Open Counter #3 immediately.';
+        sav.textContent = '38.4%';
+      } else if (type === 'SLOW_SERVICE') {
+        billingState.avg_service_time = 2.4;
+        badge.textContent = 'SLOW_SERVICE';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800';
+        rec.textContent = 'ENABLE_EXPRESS_QR_BILLING';
+        exp.textContent = 'Cashier transaction speed dropped. Direct simple snacks to express payment.';
+        sav.textContent = '29.1%';
+      } else if (type === 'COUNTER_IMBALANCE') {
+        billingState.active_counters = 1;
+        badge.textContent = 'COUNTER_IMBALANCE';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800';
+        rec.textContent = 'REBALANCE_ACTIVE_COUNTERS';
+        exp.textContent = 'Counter #2 closed during rush hour. Reopen Counter #2 immediately.';
+        sav.textContent = '47.2%';
       } else {
-        bText.innerText = `Status: ${cond}`;
-        badge.className = 'flex items-center space-x-2 px-3.5 py-1.5 rounded-lg border border-rose-500/30 bg-rose-950/30 text-rose-400 text-xs font-bold uppercase tracking-wider';
+        billingState.queue_length = 4;
+        billingState.active_counters = 2;
+        billingState.avg_service_time = 1.2;
+        badge.textContent = 'NORMAL';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700';
+        rec.textContent = 'NO_ACTION';
+        exp.textContent = 'Maintain current server staffing. Queue flow is stable.';
+        sav.textContent = '0.0%';
       }
+      recomputeRealTimeWait();
+      updateManagerView();
+    }
 
+    function applyManagerRecommendation() {
+      alert("✅ Intervention applied: Operational parameters balanced!");
+      triggerDisruption('NORMAL');
+    }
+
+    // Server telemetry background sync
+    async function syncTelemetryWithServer() {
       try {
-        await fetch('/api/disruption', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ condition: cond })
-        });
-      } catch (e) {}
-
-      stepSimulation();
+        const res = await fetch('/api/billing/telemetry');
+        if (res.ok) {
+          const data = await res.json();
+          // Keep local state in sync if backend has updates
+          if (data.queue_length !== undefined) {
+            billingState.queue_length = data.queue_length;
+            billingState.active_counters = data.active_counters;
+            recomputeRealTimeWait();
+          }
+        }
+      } catch(e){}
     }
-
-    // Update Configuration
-    async function updateConfig() {
-      const bVal = parseInt(document.getElementById('sliderBilling').value);
-      const kVal = parseInt(document.getElementById('sliderKitchen').value);
-      AppState.billingCounters = bVal;
-      AppState.kitchenStations = kVal;
-
-      document.getElementById('sliderBillingVal').innerText = bVal;
-      document.getElementById('sliderKitchenVal').innerText = kVal;
-      document.getElementById('badgeActiveCounters').innerText = `${bVal} Active Counters`;
-      document.getElementById('badgeActiveStations').innerText = `${kVal} Active Stations`;
-
-      try {
-        await fetch('/api/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ num_billing_counters: bVal, num_kitchen_resources: kVal })
-        });
-      } catch (e) {}
-    }
-
-    // Modal Control
-    function openBenchmarkModal() {
-      document.getElementById('benchmarkModal').classList.remove('hidden');
-    }
-    function closeBenchmarkModal() {
-      document.getElementById('benchmarkModal').classList.add('hidden');
-    }
-
-    // Auto Play Controls
-    document.getElementById('btnAutoPlay').addEventListener('click', () => {
-      AppState.isPlaying = !AppState.isPlaying;
-      const label = document.getElementById('autoPlayLabel');
-      const btn = document.getElementById('btnAutoPlay');
-      if (AppState.isPlaying) {
-        label.innerText = 'Pause';
-        btn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md shadow-amber-600/30 transition-all';
-        AppState.timerId = setInterval(stepSimulation, AppState.speed);
-      } else {
-        label.innerText = 'Auto-Run';
-        btn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md shadow-cyan-600/30 transition-all';
-        clearInterval(AppState.timerId);
-      }
-    });
-
-    document.getElementById('btnStep').addEventListener('click', stepSimulation);
-    document.getElementById('btnReset').addEventListener('click', () => {
-      AppState.minute = 0;
-      AppState.sim.qb = 0;
-      AppState.sim.qk = 0;
-      if (historyChart) {
-        historyChart.data.labels = [];
-        historyChart.data.datasets.forEach(d => d.data = []);
-        historyChart.update();
-      }
-      stepSimulation();
-    });
-
-    // Bootstrapping on DOM load
-    window.addEventListener('DOMContentLoaded', () => {
-      initCharts();
-      updateConfig();
-      stepSimulation();
-    });
   </script>
+
 </body>
 </html>

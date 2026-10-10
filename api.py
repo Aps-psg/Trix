@@ -1,176 +1,34 @@
-"""QueueFlux — FastAPI Backend & Web Engine
-==========================================
-Exposes the mathematical models, discrete-event simulation, particle filter,
-wait-time predictor, 5-minute forecaster, and decision optimizer via REST API.
-Serves the modern web frontend at http://localhost:8000.
+"""QueueFlux — Dynamic Consumer API & Queue Intelligence Backend
+==============================================================
+FastAPI Backend linking:
+- Person 1 ML Model (Queue Prediction & 5-Min Forecast)
+- Person 2 Intelligence (Surge Detection & Root-Cause Optimization)
+- Database Layer (TimescaleDB / SQLite Time-Series & Order Tracking)
+- Real Consumer App Flow: Login -> Ordering -> Real-Time Estimation -> Live Buzzer Tracker
 """
 
 from __future__ import annotations
 
-import os
+import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-import enum
-
-STANDALONE_MODE = False
-
-try:
-    from forecast_engine import FiveMinuteProbabilisticForecaster
-    from queue_intelligence import (
-        CanteenEventSimulator,
-        CrossStagePropagationAnalyzer,
-        GroundTruthState,
-        OperatingCondition,
-        OrderCategory,
-        ParticleFilterEstimator,
-        ProbabilisticForecaster,
-        QueueFluxBenchmark,
-        QueueFluxDecisionOptimizer,
-        StatisticalDisruptionDetector,
-        WorkloadWaitPredictor,
-    )
-    from workload_model import OrderType, WorkloadModel
-except ImportError:
-    STANDALONE_MODE = True
-
-    class OperatingCondition(str, enum.Enum):
-        NORMAL = "NORMAL"
-        DEMAND_SURGE = "DEMAND_SURGE"
-        BILLING_SLOWDOWN = "BILLING_SLOWDOWN"
-        KITCHEN_SLOWDOWN = "KITCHEN_SLOWDOWN"
-        RESOURCE_FAILURE = "RESOURCE_FAILURE"
-
-    class OrderCategory(str, enum.Enum):
-        BEVERAGE = "BEVERAGE"
-        SNACK = "SNACK"
-        MEAL = "MEAL"
-        COMBO = "COMBO"
-
-    class StandaloneGroundTruth:
-        def __init__(self, q_b: int = 0, q_k: int = 0, c_b: int = 2, c_k: int = 3, cond: Any = OperatingCondition.NORMAL):
-            self.q_billing = q_b
-            self.q_kitchen = q_k
-            self.w_billing = q_b * 1.5
-            self.w_kitchen = q_k * 4.0
-            self.active_billing_counters = c_b
-            self.active_kitchen_resources = c_k
-            self.condition = cond
-
-    class StandaloneCanteenSimulator:
-        def __init__(self, num_billing_counters: int = 2, num_kitchen_resources: int = 3, seed: int = 42):
-            self.num_billing_counters = num_billing_counters
-            self.num_kitchen_resources = num_kitchen_resources
-            self.condition = OperatingCondition.NORMAL
-            self.q_b = 0
-            self.q_k = 0
-            self.rng = np.random.default_rng(seed)
-
-        def register_arrival(self, order_id: str, category: Any, arr_time: float):
-            self.q_b += 1
-            class Order:
-                id = order_id
-            return Order()
-
-        def step_to(self, minute: float):
-            rate_b = self.num_billing_counters * (1.0 if self.condition != OperatingCondition.BILLING_SLOWDOWN else 0.4)
-            rate_k = self.num_kitchen_resources * (0.8 if self.condition != OperatingCondition.KITCHEN_SLOWDOWN else 0.3)
-            b_done = min(self.q_b, int(self.rng.poisson(max(0.1, rate_b))))
-            self.q_b = max(0, self.q_b - b_done)
-            self.q_k += b_done
-            k_done = min(self.q_k, int(self.rng.poisson(max(0.1, rate_k))))
-            self.q_k = max(0, self.q_k - k_done)
-            return b_done, k_done
-
-        def get_ground_truth_state(self):
-            return StandaloneGroundTruth(self.q_b, self.q_k, self.num_billing_counters, self.num_kitchen_resources, self.condition)
-
-        def generate_noisy_observation(self, gt, b_done, k_done):
-            class Obs:
-                noisy_camera_billing_count = max(0, int(gt.q_billing + np.random.normal(0, 1.2)))
-            return Obs()
-
-    class StandaloneEstimator:
-        def __init__(self, *args, **kwargs):
-            self.rng = np.random.default_rng(42)
-        def predict(self, delta_t=1.0): pass
-        def update(self, obs):
-            class Est:
-                expected_q_billing = float(obs.noisy_camera_billing_count)
-                expected_q_kitchen = float(max(0, obs.noisy_camera_billing_count - 1))
-                q_billing_ci = (max(0, expected_q_billing - 1.5), expected_q_billing + 1.5)
-                q_kitchen_ci = (max(0, expected_q_kitchen - 2.0), expected_q_kitchen + 2.0)
-                expected_w_billing = expected_q_billing * 1.5
-                expected_w_kitchen = expected_q_kitchen * 4.0
-                uncertainty_score = 0.12
-                estimated_arrival_rate = 5.2
-            return Est()
-
-    class StandalonePredictor:
-        def predict(self, cat, est, cb, ck):
-            wait = est.expected_q_billing * 1.2 + est.expected_q_kitchen * 1.5 + 2.5
-            return {"expected_total_wait_minutes": round(wait, 1), "lower_bound_minutes": round(wait * 0.8, 1), "upper_bound_minutes": round(wait * 1.25, 1)}
-
-    class StandaloneForecaster:
-        def __init__(self, *args, **kwargs): pass
-        def forecast_5min(self, est, cb, ck, bottleneck_threshold=15):
-            med_b = round(est.expected_q_billing * 1.05, 1)
-            med_k = round(est.expected_q_kitchen * 1.1, 1)
-            prob = round(float(np.clip((med_b + med_k) / bottleneck_threshold, 0.05, 0.95)), 2)
-            return {"median_q_billing": med_b, "median_q_kitchen": med_k, "bottleneck_probability": prob}
-
-    class StandaloneDetector:
-        def inspect(self, obs, est):
-            return OperatingCondition.NORMAL, 0.95
-
-    class StandaloneOptimizer:
-        def evaluate_interventions(self, est, cb, ck):
-            return {"recommended_action": "NO_ACTION", "decision_stability": 0.92, "expected_cost": 8.4, "cost_reduction_percent": 0.0}
-
-    class StandaloneBenchmark:
-        def run_full_benchmark(self, duration_minutes=30):
-            return {
-                "duration_minutes": duration_minutes,
-                "baseline_a_naive": {"mae": 0.83, "rmse": 1.45},
-                "baseline_b_no_filter": {"mae": 0.76, "rmse": 1.14},
-                "baseline_c_independent": {"mae": 1.33, "rmse": 2.07},
-                "queueflux": {"mae": 1.16, "rmse": 1.80, "ci_coverage_pct": 76.7},
-                "waiting_time_reduction_pct": 24.6,
-            }
-
-    class StandalonePropagation:
-        def analyze_disruption_impact(self, **kwargs):
-            return {
-                "max_billing_surge": 7.2,
-                "min_kitchen_starvation": -3.8,
-                "mean_waiting_time_increase_minutes": 4.1,
-                "cross_stage_phenomenon": "Billing slowdown starves kitchen, followed by a delayed recovery surge wave.",
-            }
-
-    CanteenEventSimulator = StandaloneCanteenSimulator
-    ParticleFilterEstimator = StandaloneEstimator
-    WorkloadWaitPredictor = StandalonePredictor
-    ProbabilisticForecaster = StandaloneForecaster
-    StatisticalDisruptionDetector = StandaloneDetector
-    QueueFluxDecisionOptimizer = StandaloneOptimizer
-    QueueFluxBenchmark = StandaloneBenchmark
-    CrossStagePropagationAnalyzer = StandalonePropagation
-    class WorkloadModel: pass
+import database as db
+from person1_ml_model import person1_predictor
+from person2_intelligence import person2_detector
 
 app = FastAPI(
-    title="QueueFlux Control Tower API",
-    description="Mathematical Queue Intelligence API for State Estimation, Forecasting, and Optimization",
-    version="2.0.0",
+    title="QueueFlux — Campus Dining Queue Intelligence System",
+    description="Full-Stack Real-Time Queue Prediction, Detection & Consumer Order Tracking",
+    version="3.0.0",
 )
 
-# Enable CORS for local dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -181,256 +39,513 @@ app.add_middleware(
 
 
 # ============================================================================
-# RUNTIME SIMULATION STATE
+# LIVE SYSTEM STATE ENGINE
 # ============================================================================
-class SimulationEngineState:
+class LiveCanteenState:
     def __init__(self) -> None:
-        self.reset()
+        self.queue_length = 3
+        self.arrival_rate = 3.5
+        self.service_rate = 4.0
+        self.active_counters = 2
+        self.avg_service_time = 1.2
+        self.disruption_mode = "NORMAL"
 
-    def reset(self, num_billing: int = 2, num_kitchen: int = 3) -> None:
-        self.current_minute = 0
-        self.simulator = CanteenEventSimulator(
-            num_billing_counters=num_billing,
-            num_kitchen_resources=num_kitchen,
-            seed=int(np.random.default_rng().integers(1, 10000)),
+    def step_minute(self) -> None:
+        """Simulates live customer arrivals and counter departures for 1 minute."""
+        # Adjust rates based on active disruption
+        arr = self.arrival_rate
+        ast = self.avg_service_time
+
+        if self.disruption_mode == "HIGH_DEMAND":
+            arr = 7.2
+        elif self.disruption_mode == "SLOW_SERVICE":
+            ast = 2.4
+        elif self.disruption_mode == "COUNTER_IMBALANCE":
+            self.active_counters = 1
+
+        self.service_rate = self.active_counters / max(0.1, ast)
+        net = int(arr - self.service_rate)
+        self.queue_length = max(0, self.queue_length + net)
+
+        # Record to TimescaleDB / SQLite
+        db.record_telemetry(
+            arrival_rate=round(arr, 2),
+            service_rate=round(self.service_rate, 2),
+            queue_length=self.queue_length,
+            active_counters=self.active_counters,
+            avg_service_time=round(ast, 2),
+            congestion_level="CRITICAL" if self.queue_length > 10 else ("WARNING" if self.queue_length > 5 else "NORMAL")
         )
-        self.pf_estimator = ParticleFilterEstimator(num_particles=120, seed=42)
-        self.predictor = WorkloadWaitPredictor()
-        self.forecaster = ProbabilisticForecaster(num_rollouts=60, seed=42)
-        self.detector = StatisticalDisruptionDetector()
-        self.optimizer = QueueFluxDecisionOptimizer()
-        self.workload_model = WorkloadModel()
-        self.history: List[Dict[str, Any]] = []
-        self.condition = OperatingCondition.NORMAL
-        self.missing_noise = True
 
 
-state = SimulationEngineState()
+live_canteen = LiveCanteenState()
 
 
 # ============================================================================
-# API MODELS
+# DATA SCHEMAS
 # ============================================================================
-class StepRequest(BaseModel):
-    step_minutes: float = 1.0
-    bottleneck_threshold: int = 15
+class LoginRequest(BaseModel):
+    roll_or_email: str
+    role: Optional[str] = "STUDENT"
 
 
-class ConfigRequest(BaseModel):
-    num_billing_counters: int
-    num_kitchen_resources: int
-    condition: Optional[str] = "NORMAL"
-    missing_noise: Optional[bool] = True
+class StudentRegisterRequest(BaseModel):
+    roll_no: str
+    name: str
+    department: Optional[str] = "Computer Science"
 
 
-class DisruptionRequest(BaseModel):
-    condition: str  # NORMAL, DEMAND_SURGE, BILLING_SLOWDOWN, KITCHEN_SLOWDOWN, RESOURCE_FAILURE
+class BillingTelemetryUpdate(BaseModel):
+    queue_length: Optional[int] = None
+    active_counters: Optional[int] = None
+    avg_service_time: Optional[float] = None
+
+
+class CartItem(BaseModel):
+    item_id: str
+    name: str
+    category: str  # BEVERAGE, SNACK, MEAL, COMBO
+    quantity: int
+    base_prep_time_min: float
+    price: float
+
+
+class EstimateRequest(BaseModel):
+    items: List[CartItem]
+
+
+class PlaceOrderRequest(BaseModel):
+    student_id: str
+    student_name: str
+    items: List[CartItem]
+
+
+class CounterUpdateRequest(BaseModel):
+    active_counters: int
+
+
+class DisruptionTriggerRequest(BaseModel):
+    disruption_type: str  # NORMAL, HIGH_DEMAND, SLOW_SERVICE, COUNTER_IMBALANCE
 
 
 # ============================================================================
-# API ENDPOINTS
+# MENU CATALOG
 # ============================================================================
-@app.get("/api/state")
-def get_current_state() -> Dict[str, Any]:
-    """Retrieve the current ground truth and estimated queue telemetry."""
-    gt = state.simulator.get_ground_truth_state()
-    latest_hist = state.history[-1] if state.history else None
+CANTEEN_MENU = [
+    {
+        "id": "item_bev_1",
+        "name": "☕ South Indian Filter Coffee",
+        "category": "BEVERAGE",
+        "price": 25.0,
+        "base_prep_time_min": 1.2,
+        "description": "Freshly brewed chicory coffee. Quick 1-minute counter pickup.",
+    },
+    {
+        "id": "item_snk_1",
+        "name": "🥪 Grilled Veg Cheese Sandwich",
+        "category": "SNACK",
+        "price": 60.0,
+        "base_prep_time_min": 2.5,
+        "description": "Toasted multigrain bread with fresh vegetables and cheese.",
+    },
+    {
+        "id": "item_meal_1",
+        "name": "🍛 Executive Lunch Thali",
+        "category": "MEAL",
+        "price": 95.0,
+        "base_prep_time_min": 5.0,
+        "description": "Steamed basmati rice, paneer butter masala, dal fry & 2 rotis.",
+    },
+    {
+        "id": "item_combo_1",
+        "name": "🍱 Campus Rush Hour Combo Box",
+        "category": "COMBO",
+        "price": 120.0,
+        "base_prep_time_min": 7.5,
+        "description": "Full mini-meal with samosa snack and cold beverage included.",
+    },
+]
+
+
+# ============================================================================
+# 1. AUTHENTICATION & PROFILE APIS
+# ============================================================================
+@app.post("/api/auth/login")
+def login(req: LoginRequest) -> Dict[str, Any]:
+    """Authenticates student, cashier, or manager session."""
+    conn = db.get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE roll_or_email = ?", (req.roll_or_email.strip(),))
+    user = cursor.fetchone()
+    conn.close()
+
+    if not user:
+        # Create student account on the fly for demo convenience
+        user_id = f"usr_{int(datetime.datetime.now().timestamp() % 10000)}"
+        name = "Student " + req.roll_or_email.strip()
+        conn = db.get_db_connection()
+        conn.execute("INSERT INTO users (id, name, roll_or_email, role, avatar) VALUES (?, ?, ?, ?, ?)",
+                     (user_id, name, req.roll_or_email.strip(), req.role or "STUDENT", "🎓"))
+        conn.commit()
+        conn.close()
+        return {"user_id": user_id, "name": name, "roll_or_email": req.roll_or_email, "role": req.role or "STUDENT", "avatar": "🎓"}
+
+    return dict(user)
+
+
+@app.post("/api/auth/register-student")
+def register_student(req: StudentRegisterRequest) -> Dict[str, Any]:
+    """Registers or logs in a student using their College Roll Number and generates a unique UID."""
+    clean_roll = req.roll_no.strip().upper()
+    clean_name = req.name.strip()
+    if not clean_roll or not clean_name:
+        raise HTTPException(status_code=400, detail="Name and Roll Number are required")
+
+    conn = db.get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE roll_or_email = ?", (clean_roll,))
+    user = cursor.fetchone()
+
+    if not user:
+        # Generate persistent student UID
+        import random
+        uid_num = random.randint(1000, 9999)
+        user_id = f"STU-{clean_roll}-{uid_num}"
+        cursor.execute(
+            "INSERT INTO users (id, name, roll_or_email, role, avatar) VALUES (?, ?, ?, ?, ?)",
+            (user_id, clean_name, clean_roll, "STUDENT", "🎓")
+        )
+        conn.commit()
+        user_record = {
+            "id": user_id,
+            "user_id": user_id,
+            "name": clean_name,
+            "roll_no": clean_roll,
+            "department": req.department,
+            "role": "STUDENT",
+            "avatar": "🎓"
+        }
+    else:
+        user_record = dict(user)
+        if not user_record["id"].startswith(f"STU-{clean_roll}"):
+            import random
+            uid_num = random.randint(1000, 9999)
+            new_id = f"STU-{clean_roll}-{uid_num}"
+            cursor.execute(
+                "UPDATE users SET id = ?, name = ? WHERE roll_or_email = ?",
+                (new_id, clean_name, clean_roll)
+            )
+            conn.commit()
+            user_record["id"] = new_id
+        user_record["user_id"] = user_record["id"]
+        user_record["roll_no"] = clean_roll
+        user_record["department"] = req.department
+
+    conn.close()
+    return user_record
+
+
+@app.get("/api/auth/demo-users")
+def get_demo_users() -> List[Dict[str, Any]]:
+    """Lists pre-configured accounts for fast 1-click login."""
+    conn = db.get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users")
+    users = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return users
+
+
+# ============================================================================
+# BILLING COUNTER LIVE TELEMETRY & WAIT CALCULATION APIS
+# ============================================================================
+@app.get("/api/billing/telemetry")
+def get_billing_telemetry() -> Dict[str, Any]:
+    """Returns live inputs from billing counter: queue length, active counters,
+    throughput rate, and real-time calculated billing waiting time.
+    """
+    effective_service_rate = live_canteen.active_counters / max(0.1, live_canteen.avg_service_time)
+    billing_wait_min = (live_canteen.queue_length + 1) / max(0.1, effective_service_rate)
+    congestion_level = "CRITICAL" if live_canteen.queue_length > 10 else ("WARNING" if live_canteen.queue_length > 5 else "NORMAL")
+
     return {
-        "minute": state.current_minute,
-        "ground_truth": {
-            "q_billing": gt.q_billing,
-            "q_kitchen": gt.q_kitchen,
-            "w_billing": gt.w_billing,
-            "w_kitchen": gt.w_kitchen,
-            "active_billing_counters": gt.active_billing_counters,
-            "active_kitchen_resources": gt.active_kitchen_resources,
-            "condition": gt.condition.value,
-        },
-        "latest_telemetry": latest_hist,
-        "history_length": len(state.history),
+        "queue_length": live_canteen.queue_length,
+        "active_counters": live_canteen.active_counters,
+        "avg_service_time": round(live_canteen.avg_service_time, 2),
+        "arrival_rate": round(live_canteen.arrival_rate, 2),
+        "service_rate": round(effective_service_rate, 2),
+        "billing_wait_min": round(billing_wait_min, 1),
+        "billing_wait_sec": int(billing_wait_min * 60),
+        "congestion_level": congestion_level,
+        "formula": f"({live_canteen.queue_length} queue + 1) / ({live_canteen.active_counters} counters * {round(1.0 / max(0.1, live_canteen.avg_service_time), 2)} cust/min)"
     }
 
 
-@app.post("/api/step")
-def step_simulation(req: StepRequest) -> Dict[str, Any]:
-    """Advance simulation by 1 minute, execute Particle Filter update,
+@app.post("/api/billing/update-telemetry")
+def update_billing_telemetry(req: BillingTelemetryUpdate) -> Dict[str, Any]:
+    """Updates live billing counter parameters directly."""
+    if req.queue_length is not None:
+        live_canteen.queue_length = max(0, req.queue_length)
+    if req.active_counters is not None:
+        live_canteen.active_counters = max(1, req.active_counters)
+    if req.avg_service_time is not None:
+        live_canteen.avg_service_time = max(0.2, req.avg_service_time)
+    return get_billing_telemetry()
 
-    generate 5-min forecast, and optimize decisions.
+
+@app.post("/api/billing/serve-next")
+def serve_next_billing_customer() -> Dict[str, Any]:
+    """Decrements billing queue by 1 when a customer finishes checkout."""
+    live_canteen.queue_length = max(0, live_canteen.queue_length - 1)
+    return get_billing_telemetry()
+
+
+@app.post("/api/billing/add-customer")
+def add_billing_customer() -> Dict[str, Any]:
+    """Increments billing queue by 1 when a customer joins line."""
+    live_canteen.queue_length += 1
+    return get_billing_telemetry()
+
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok", "service": "QueueFlux", "version": "3.0.0"}
+
+
+# ============================================================================
+# 2. CONSUMER ORDERING & ESTIMATION ENGINE
+# ============================================================================
+@app.get("/api/consumer/menu")
+def get_menu() -> List[Dict[str, Any]]:
+    """Returns canteen menu with item categories and baseline preparation workloads."""
+    return CANTEEN_MENU
+
+
+@app.post("/api/consumer/estimate")
+def compute_live_estimation(req: EstimateRequest) -> Dict[str, Any]:
+    """Executes the internal processing engine:
+
+    Combines Person 1's ML queue forecast, Person 2's disruption detections,
+    and order item workloads to compute exact Billing Time + Prep Time + Queue Wait.
     """
-    state.current_minute += 1
-    m = state.current_minute
-    sim = state.simulator
-    pf = state.pf_estimator
+    if not req.items:
+        return {
+            "billing_wait_min": 0.0,
+            "queue_delay_min": 0.0,
+            "kitchen_prep_min": 0.0,
+            "total_wait_min": 0.0,
+            "total_wait_sec": 0,
+            "ready_time_str": datetime.datetime.now().strftime("%I:%M %p"),
+        }
 
-    sim.condition = state.condition
+    # 1. Run Person 1 ML Prediction
+    ml_res = person1_predictor.predict(
+        queue_length=live_canteen.queue_length,
+        arrival_rate=live_canteen.arrival_rate,
+        service_rate=live_canteen.service_rate,
+        active_counters=live_canteen.active_counters,
+        avg_service_time=live_canteen.avg_service_time,
+    )
+    predicted_queue = ml_res["predicted_queue_length"]
 
-    # Time-dependent arrival rate
-    base_lam = 1.0 + 2.5 * np.exp(-((m - 45.0) ** 2) / (2 * (15.0 ** 2)))
-    surge_mult = 2.2 if sim.condition == OperatingCondition.DEMAND_SURGE else 1.0
-    lam = base_lam * surge_mult
-    arrivals = int(np.random.default_rng().poisson(lam))
-
-    cats = [OrderCategory.BEVERAGE, OrderCategory.SNACK, OrderCategory.MEAL, OrderCategory.COMBO]
-    probs = [0.35, 0.30, 0.25, 0.10]
-    new_orders = []
-    for _ in range(arrivals):
-        cat_idx = int(np.random.choice(len(cats), p=probs))
-        cat = cats[cat_idx]
-        arr_t = (m - 1) + float(np.random.uniform(0.0, 0.99))
-        o = sim.register_arrival(f"ORD-{m:02d}-{_+1}", cat, arr_t)
-        new_orders.append({"id": o.id, "category": cat.value})
-
-    # Step simulator
-    b_done, k_done = sim.step_to(float(m))
-    gt = sim.get_ground_truth_state()
-
-    # Generate noisy observation
-    obs = sim.generate_noisy_observation(gt, b_done, k_done)
-    if not state.missing_noise:
-        obs.noisy_camera_billing_count = gt.q_billing
-
-    # Particle Filter update
-    pf.predict(delta_t=1.0)
-    est = pf.update(obs)
-
-    # Predictions
-    pred_bev = state.predictor.predict(OrderCategory.BEVERAGE, est, gt.active_billing_counters, gt.active_kitchen_resources)
-    pred_snk = state.predictor.predict(OrderCategory.SNACK, est, gt.active_billing_counters, gt.active_kitchen_resources)
-    pred_meal = state.predictor.predict(OrderCategory.MEAL, est, gt.active_billing_counters, gt.active_kitchen_resources)
-    pred_combo = state.predictor.predict(OrderCategory.COMBO, est, gt.active_billing_counters, gt.active_kitchen_resources)
-
-    # 5-Minute Forecast
-    fc = state.forecaster.forecast_5min(
-        est,
-        gt.active_billing_counters,
-        gt.active_kitchen_resources,
-        bottleneck_threshold=req.bottleneck_threshold,
+    # 2. Run Person 2 Diagnostic
+    det_res = person2_detector.analyze(
+        queue_length=live_canteen.queue_length,
+        arrival_rate=live_canteen.arrival_rate,
+        service_rate=live_canteen.service_rate,
+        active_counters=live_canteen.active_counters,
+        avg_service_time=live_canteen.avg_service_time,
+        ml_predicted_queue=predicted_queue,
+        ml_predicted_wait=ml_res["predicted_wait_time"],
     )
 
-    # Disruption Detector & Optimizer
-    cond_det, conf = state.detector.inspect(obs, est)
-    decision = state.optimizer.evaluate_interventions(est, gt.active_billing_counters, gt.active_kitchen_resources)
+    # 3. Stage A: Billing Time Estimation
+    billing_time_min = live_canteen.avg_service_time
+    queue_delay_min = (predicted_queue * live_canteen.avg_service_time) / max(1, live_canteen.active_counters)
 
-    step_data = {
-        "minute": m,
-        "arrivals_count": arrivals,
-        "billing_completions": b_done,
-        "kitchen_completions": k_done,
-        "ground_truth": {
-            "q_billing": gt.q_billing,
-            "q_kitchen": gt.q_kitchen,
-            "w_billing": gt.w_billing,
-            "w_kitchen": gt.w_kitchen,
-            "active_billing": gt.active_billing_counters,
-            "active_kitchen": gt.active_kitchen_resources,
-            "condition": gt.condition.value,
-        },
-        "estimated": {
-            "q_billing": est.expected_q_billing,
-            "q_kitchen": est.expected_q_kitchen,
-            "q_billing_ci": est.q_billing_ci,
-            "q_kitchen_ci": est.q_kitchen_ci,
-            "w_billing": est.expected_w_billing,
-            "w_kitchen": est.expected_w_kitchen,
-            "uncertainty_score": est.uncertainty_score,
-            "arrival_rate": est.estimated_arrival_rate,
-        },
-        "waiting_times": {
-            "BEVERAGE": pred_bev["expected_total_wait_minutes"],
-            "SNACK": pred_snk["expected_total_wait_minutes"],
-            "MEAL": pred_meal["expected_total_wait_minutes"],
-            "COMBO": pred_combo["expected_total_wait_minutes"],
-            "meal_range": [pred_meal["lower_bound_minutes"], pred_meal["upper_bound_minutes"]],
-        },
-        "forecast_5min": fc,
-        "detection": {
-            "condition": cond_det.value,
-            "confidence": conf,
-        },
-        "recommendation": decision,
+    # 4. Stage B: Kitchen Preparation Time (Item-Specific Workload)
+    max_prep_item = max(item.base_prep_time_min for item in req.items)
+    total_items = sum(item.quantity for item in req.items)
+    batching_factor = 1.0 + 0.2 * max(0, total_items - 1)
+    kitchen_prep_min = max_prep_item * batching_factor
+
+    # Adjust for slowdown disruption if detected by Person 2
+    if det_res["slowdown_detected"]:
+        kitchen_prep_min *= 1.35
+
+    # 5. Total Expected Registration-to-Collection Time
+    total_wait_min = billing_time_min + queue_delay_min + kitchen_prep_min
+    total_wait_sec = int(total_wait_min * 60)
+
+    now = datetime.datetime.now()
+    ready_time = now + datetime.timedelta(seconds=total_wait_sec)
+
+    return {
+        "billing_wait_min": round(billing_time_min, 1),
+        "queue_delay_min": round(queue_delay_min, 1),
+        "kitchen_prep_min": round(kitchen_prep_min, 1),
+        "total_wait_min": round(total_wait_min, 1),
+        "total_wait_sec": total_wait_sec,
+        "ready_time_str": ready_time.strftime("%I:%M %p"),
+        "predicted_queue_ahead": int(round(predicted_queue)),
+        "congestion_level": det_res["congestion_level"],
+        "congestion_cause": det_res["congestion_cause"],
     }
 
-    state.history.append(step_data)
-    return step_data
 
+@app.post("/api/consumer/orders")
+def place_order(req: PlaceOrderRequest) -> Dict[str, Any]:
+    """Places consumer order, stores in database, and generates active ticket with countdown."""
+    if not req.items:
+        raise HTTPException(status_code=400, detail="Cannot place empty order")
 
-@app.post("/api/disruption")
-def set_disruption(req: DisruptionRequest) -> Dict[str, Any]:
-    """Inject a live operational disruption scenario."""
-    try:
-        cond = OperatingCondition(req.condition.upper())
-        state.condition = cond
-        state.simulator.condition = cond
-        return {"status": "success", "active_condition": cond.value}
-    except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid condition: {req.condition}")
+    # Run estimation
+    est_req = EstimateRequest(items=req.items)
+    estimation = compute_live_estimation(est_req)
 
+    category = req.items[0].category if req.items else "MEAL"
+    assigned_counter = (int(datetime.datetime.now().timestamp()) % live_canteen.active_counters) + 1
 
-@app.post("/api/config")
-def update_configuration(req: ConfigRequest) -> Dict[str, Any]:
-    """Update active server resources and operational flags."""
-    state.simulator.num_billing_counters = max(1, req.num_billing_counters)
-    state.simulator.num_kitchen_resources = max(1, req.num_kitchen_resources)
-    if req.condition:
-        state.condition = OperatingCondition(req.condition.upper())
-        state.simulator.condition = state.condition
-    if req.missing_noise is not None:
-        state.missing_noise = req.missing_noise
+    # Record to DB
+    order = db.create_order(
+        student_id=req.student_id,
+        student_name=req.student_name,
+        items=[item.model_dump() for item in req.items],
+        order_category=category,
+        billing_wait_sec=estimation["billing_wait_min"] * 60,
+        prep_time_sec=estimation["kitchen_prep_min"] * 60,
+        total_wait_sec=estimation["total_wait_sec"],
+        counter_assigned=assigned_counter,
+    )
+
+    # Increment live queue
+    live_canteen.queue_length += 1
+
     return {
         "status": "success",
-        "billing_counters": state.simulator.num_billing_counters,
-        "kitchen_resources": state.simulator.num_kitchen_resources,
-        "condition": state.condition.value,
-        "missing_noise": state.missing_noise,
+        "order": order,
+        "estimation": estimation,
     }
 
 
-@app.post("/api/reset")
-def reset_simulation() -> Dict[str, Any]:
-    """Reset simulation engine state to minute 0."""
-    state.reset()
-    return {"status": "success", "message": "Simulation reset to t=0"}
-
-
-@app.get("/api/history")
-def get_history() -> List[Dict[str, Any]]:
-    """Retrieve full history trace for graphing."""
-    return state.history
-
-
-@app.get("/api/benchmark")
-def run_benchmark(duration: int = 30) -> Dict[str, Any]:
-    """Execute quantitative benchmark comparing QueueFlux against Baselines A, B, and C."""
-    bm = QueueFluxBenchmark()
-    return bm.run_full_benchmark(duration_minutes=duration)
-
-
-@app.get("/api/propagation")
-def run_propagation(disruption: str = "BILLING_SLOWDOWN") -> Dict[str, Any]:
-    """Run matched paired counterfactual propagation analysis."""
-    cond = OperatingCondition(disruption.upper())
-    analyzer = CrossStagePropagationAnalyzer()
-    gt = state.simulator.get_ground_truth_state()
-    return analyzer.analyze_disruption_impact(base_state=gt, disruption=cond, horizon_minutes=15, replications=20)
+@app.get("/api/consumer/my-orders")
+def get_my_orders(student_id: str) -> List[Dict[str, Any]]:
+    """Retrieves active orders and past tickets for a student."""
+    return db.get_student_orders(student_id)
 
 
 # ============================================================================
-# STATIC FRONTEND SERVING
+# 3. KITCHEN STAFF & CASHIER CONSOLE APIS
+# ============================================================================
+@app.get("/api/staff/queue")
+def get_staff_queue() -> Dict[str, Any]:
+    """Retrieves all active orders segmented by Stage A (Billing) and Stage B (Kitchen)."""
+    orders = db.get_active_orders()
+    billing_orders = [o for o in orders if o["order_status"] == "WAITING_BILLING"]
+    kitchen_orders = [o for o in orders if o["order_status"] == "PREPARING"]
+    ready_orders = [o for o in orders if o["order_status"] == "READY"]
+
+    return {
+        "active_counters": live_canteen.active_counters,
+        "total_active": len(orders),
+        "billing_stage": billing_orders,
+        "kitchen_stage": kitchen_orders,
+        "ready_stage": ready_orders,
+    }
+
+
+@app.post("/api/staff/orders/{order_id}/advance")
+def advance_order(order_id: str) -> Dict[str, Any]:
+    """Advances order status through the canteen lifecycle."""
+    res = db.advance_order_status(order_id)
+    if res.get("current_status") == "READY":
+        live_canteen.queue_length = max(0, live_canteen.queue_length - 1)
+    return res
+
+
+# ============================================================================
+# 4. CANTEEN MANAGER CONTROL TOWER & ANALYTICS
+# ============================================================================
+@app.get("/api/manager/control-tower")
+def get_manager_control_tower() -> Dict[str, Any]:
+    """Combines Person 1 predictions, Person 2 detections, and TimescaleDB telemetry."""
+    # 1. Person 1 Model Forecast
+    ml_res = person1_predictor.predict(
+        queue_length=live_canteen.queue_length,
+        arrival_rate=live_canteen.arrival_rate,
+        service_rate=live_canteen.service_rate,
+        active_counters=live_canteen.active_counters,
+        avg_service_time=live_canteen.avg_service_time,
+    )
+
+    # 2. Person 2 Intelligence Diagnostic
+    det_res = person2_detector.analyze(
+        queue_length=live_canteen.queue_length,
+        arrival_rate=live_canteen.arrival_rate,
+        service_rate=live_canteen.service_rate,
+        active_counters=live_canteen.active_counters,
+        avg_service_time=live_canteen.avg_service_time,
+        ml_predicted_queue=ml_res["predicted_queue_length"],
+        ml_predicted_wait=ml_res["predicted_wait_time"],
+    )
+
+    # 3. Recent Time-Series from DB
+    history = db.get_recent_telemetry(limit=15)
+
+    return {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "live_metrics": {
+            "queue_length": live_canteen.queue_length,
+            "arrival_rate": round(live_canteen.arrival_rate, 2),
+            "service_rate": round(live_canteen.service_rate, 2),
+            "active_counters": live_canteen.active_counters,
+            "avg_service_time": round(live_canteen.avg_service_time, 2),
+            "disruption_mode": live_canteen.disruption_mode,
+        },
+        "person1_prediction": ml_res,
+        "person2_intelligence": det_res,
+        "time_series_history": history,
+    }
+
+
+@app.post("/api/manager/counters")
+def update_counters(req: CounterUpdateRequest) -> Dict[str, Any]:
+    """Adjusts active billing counters."""
+    live_canteen.active_counters = max(1, req.active_counters)
+    return {"status": "success", "active_counters": live_canteen.active_counters}
+
+
+@app.post("/api/manager/disruption")
+def set_disruption(req: DisruptionTriggerRequest) -> Dict[str, Any]:
+    """Injects operational scenario (HIGH_DEMAND, SLOW_SERVICE, COUNTER_IMBALANCE, NORMAL)."""
+    live_canteen.disruption_mode = req.disruption_type.upper()
+    return {"status": "success", "active_disruption": live_canteen.disruption_mode}
+
+
+@app.post("/api/manager/step")
+def simulate_step() -> Dict[str, Any]:
+    """Advances queue simulation by 1 minute and writes snapshot to TimescaleDB/SQLite."""
+    live_canteen.step_minute()
+    return get_manager_control_tower()
+
+
+# ============================================================================
+# 5. STATIC FRONTEND SERVING
 # ============================================================================
 frontend_dir = Path(__file__).parent / "frontend"
 if frontend_dir.exists():
     app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
 
     @app.get("/")
-    def serve_frontend():
+    def serve_app():
         index_file = frontend_dir / "index.html"
         if index_file.exists():
             return FileResponse(index_file)
-        return HTMLResponse("<h1>QueueFlux API Running</h1><p>Frontend index.html not found.</p>")
+        return HTMLResponse("<h1>QueueFlux Backend Running</h1>")
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    print("Starting QueueFlux API Server on http://localhost:8000 ...")
+    print("Starting QueueFlux Consumer Web & Intelligence Server on http://localhost:8000 ...")
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)

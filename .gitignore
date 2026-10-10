@@ -40,3 +40,9 @@ venv.bak/
 # OS metadata
 Thumbs.db
 .DS_Store
+
+# Database & local data
+*.db
+*.sqlite3
+data/*.db
+.pytest_cache/

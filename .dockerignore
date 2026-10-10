@@ -1,0 +1,16 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.git/
+.gitignore
+.github/
+.vscode/
+data/*.db-journal
+tests/__pycache__
+queueflux/__pycache__
+*.log
