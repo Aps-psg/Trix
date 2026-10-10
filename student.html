@@ -248,7 +248,7 @@
         </div>
 
         <!-- Role Nav Switcher (Top Center) -->
-        <div class="hidden md:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+        <div id="roleNavSwitcher" class="hidden md:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
           <button type="button" onclick="switchAppView('student')" id="navAppStudent" class="px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-xs flex items-center space-x-1.5">
             <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
             <span>Student App</span>
@@ -825,7 +825,26 @@
       document.getElementById('appUserUid').textContent = currentUser.uid;
       document.getElementById('appUserAvatar').textContent = currentUser.avatar;
 
-      switchAppView(initialView || 'student');
+      // STRICT ROLE-BASED ACCESS CONTROL:
+      // When a student logs in, ONLY the student app is visible.
+      // When billing staff logs in, ONLY the billing POS console is visible.
+      // When kitchen logs in, ONLY the kitchen chef display is visible.
+      const navSwitcher = document.getElementById('roleNavSwitcher');
+      if (currentUser.role === 'STUDENT') {
+        if (navSwitcher) navSwitcher.style.display = 'none';
+        switchAppView('student');
+      } else if (currentUser.role === 'BILLING') {
+        if (navSwitcher) navSwitcher.style.display = 'none';
+        switchAppView('billing');
+      } else if (currentUser.role === 'KITCHEN') {
+        if (navSwitcher) navSwitcher.style.display = 'none';
+        switchAppView('kitchen');
+      } else if (currentUser.role === 'MANAGER') {
+        if (navSwitcher) navSwitcher.style.display = 'flex';
+        switchAppView('manager');
+      } else {
+        switchAppView(initialView || 'student');
+      }
     }
 
     function logoutToLoginScreen() {
