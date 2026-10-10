@@ -734,11 +734,24 @@
     let selectedLoginRole = 'student';
     let forecastChart = null;
 
-    let staffOrders = [
-      { order_id: 'ORD-4011', student_name: 'Pooja Sundaram', roll_no: '23EC041', uid: 'STU-23EC041-3912', item_summary: '🍱 Thali (1)', status: 'WAITING_BILLING', total_wait_min: 8.5 },
-      { order_id: 'ORD-4012', student_name: 'Rohan Mehta', roll_no: '22ME019', uid: 'STU-22ME019-8172', item_summary: '🥪 Sandwich (1)', status: 'PREPARING', total_wait_min: 5.2 },
-      { order_id: 'ORD-4013', student_name: 'Deepak Rao', roll_no: '24CS088', uid: 'STU-24CS088-1294', item_summary: '☕ Coffee (2)', status: 'READY', total_wait_min: 2.0 }
-    ];
+    function getStoredOrders() {
+      try {
+        const raw = localStorage.getItem('qfx_orders');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) {}
+      return [];
+    }
+
+    function saveStoredOrders(list) {
+      try {
+        localStorage.setItem('qfx_orders', JSON.stringify(list));
+      } catch (e) {}
+    }
+
+    let staffOrders = getStoredOrders();
 
     // --- Init on DOM Load ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -1096,15 +1109,24 @@
 
       ticketCountdownSec = Math.round(parseFloat(document.getElementById('estTotalWaitDisplay').textContent.replace(/[^\d.]/g, '')) * 60);
 
-      staffOrders.unshift({
+      const itemsSummaryText = itemsSelected.map(([id, q]) => {
+        const m = menuItems.find(x => x.id === id);
+        return `${m ? m.name.split(' ')[0] : 'Item'} (${q})`;
+      }).join(', ');
+
+      const newOrder = {
         order_id: orderId,
         student_name: currentUser.name,
         roll_no: currentUser.roll_no,
         uid: currentUser.uid,
-        item_summary: `Meal Order (${itemsSelected.length} items)`,
+        item_summary: itemsSummaryText || `Canteen Meal (${itemsSelected.length} items)`,
         status: 'WAITING_BILLING',
-        total_wait_min: (ticketCountdownSec / 60).toFixed(1)
-      });
+        total_wait_min: (ticketCountdownSec / 60).toFixed(1),
+        created_at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      };
+
+      staffOrders.unshift(newOrder);
+      saveStoredOrders(staffOrders);
       updateStaffOrdersUI();
 
       try {
@@ -1161,7 +1183,9 @@
       const waiting = staffOrders.find(o => o.status === 'WAITING_BILLING');
       if (waiting) {
         waiting.status = 'PREPARING';
+        saveStoredOrders(staffOrders);
         updateStaffOrdersUI();
+        if (currentAppView === 'kitchen') renderKitchenGrid();
       }
     }
 
@@ -1176,10 +1200,13 @@
       if (order.status === 'WAITING_BILLING') order.status = 'PREPARING';
       else if (order.status === 'PREPARING') order.status = 'READY';
       else if (order.status === 'READY') staffOrders = staffOrders.filter(o => o.order_id !== orderId);
+      saveStoredOrders(staffOrders);
       updateStaffOrdersUI();
+      if (currentAppView === 'kitchen') renderKitchenGrid();
     }
 
     function updateStaffOrdersUI() {
+      staffOrders = getStoredOrders();
       const billingList = document.getElementById('staffBillingOrdersList');
       const kitchenList = document.getElementById('staffKitchenOrdersList');
       const readyList = document.getElementById('staffReadyOrdersList');
@@ -1197,8 +1224,9 @@
           <div>
             <div class="font-bold text-slate-900">${o.student_name} <span class="font-mono text-indigo-700">(${o.roll_no})</span></div>
             <div class="text-[10px] text-slate-500 font-mono">${o.uid}</div>
+            <div class="text-[10px] text-slate-600 mt-0.5">${o.item_summary || 'Order'}</div>
           </div>
-          <button type="button" onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-[11px]">Billed → Cook</button>
+          <button type="button" onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-[11px] shrink-0 cursor-pointer">Billed → Cook</button>
         </div>
       `).join('') || `<p class="text-slate-400 text-xs italic py-2">No students waiting at billing.</p>`;
 
@@ -1207,8 +1235,9 @@
           <div>
             <div class="font-bold text-slate-900">${o.student_name} <span class="font-mono text-amber-700">(${o.roll_no})</span></div>
             <div class="text-[10px] text-slate-500 font-mono">${o.uid}</div>
+            <div class="text-[10px] text-slate-600 mt-0.5">${o.item_summary || 'Cooking'}</div>
           </div>
-          <button type="button" onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-[11px]">Cooked → Bell 🔔</button>
+          <button type="button" onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-[11px] shrink-0 cursor-pointer">Cooked → Bell 🔔</button>
         </div>
       `).join('') || `<p class="text-slate-400 text-xs italic py-2">Kitchen queue clear.</p>`;
 
@@ -1218,12 +1247,13 @@
             <div class="font-bold text-slate-900">${o.student_name} <span class="font-mono text-emerald-700">(${o.roll_no})</span></div>
             <div class="text-[10px] text-slate-500 font-mono">Buzzer Ringing</div>
           </div>
-          <button type="button" onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold text-[11px]">Picked Up ✓</button>
+          <button type="button" onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold text-[11px] shrink-0 cursor-pointer">Picked Up ✓</button>
         </div>
       `).join('') || `<p class="text-slate-400 text-xs italic py-2">No food pending pickup.</p>`;
     }
 
     function renderKitchenGrid() {
+      staffOrders = getStoredOrders();
       const container = document.getElementById('kitchenLiveGrid');
       const cooking = staffOrders.filter(o => o.status === 'PREPARING');
       container.innerHTML = cooking.map(o => `
