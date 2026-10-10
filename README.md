@@ -11,16 +11,18 @@ The repository is organized into dedicated, self-contained modular branches so t
 | Branch Name | Focus Area | Technical Ownership | Key Files |
 | :--- | :--- | :--- | :--- |
 | [**`main`**](https://github.com/Aps-psg/Trix/tree/main) | **Production Integrated Master** | Unified Framework | Complete system integrating Person 1, Person 2, Person 3, and Web UI |
-| [**`frontend-backend`**](https://github.com/Aps-psg/Trix/tree/frontend-backend) | **Web Control Tower & REST API** | UI / API Engineering | [`frontend/index.html`](file:///E:/queue-intelligence/frontend/index.html), [`api.py`](file:///E:/queue-intelligence/api.py), [`app.py`](file:///E:/queue-intelligence/app.py) |
+| [**`person1-simulator`**](https://github.com/Aps-psg/Trix/tree/person1-simulator) | **Discrete Simulator & Synthetic Data** | Person 1 Foundation | [`queueflux/simulator/`](file:///E:/queue-intelligence/queueflux/simulator/), [`data/`](file:///E:/queue-intelligence/data/), [`queueflux/models/`](file:///E:/queue-intelligence/queueflux/models/), [`run_demo.py`](file:///E:/queue-intelligence/run_demo.py) |
 | [**`core-model`**](https://github.com/Aps-psg/Trix/tree/core-model) | **Core Estimation & Forecasting** | Person 2 Core Model | [`workload_model.py`](file:///E:/queue-intelligence/workload_model.py), [`state_estimator.py`](file:///E:/queue-intelligence/state_estimator.py), [`wait_predictor.py`](file:///E:/queue-intelligence/wait_predictor.py), [`forecast_engine.py`](file:///E:/queue-intelligence/forecast_engine.py), [`test_person2.py`](file:///E:/queue-intelligence/test_person2.py) |
 | [**`intelligence-layer`**](https://github.com/Aps-psg/Trix/tree/intelligence-layer) | **Disruptions & Decisions** | Person 3 Intelligence | [`disruption_detector.py`](file:///E:/queue-intelligence/disruption_detector.py), [`propagation_analyzer.py`](file:///E:/queue-intelligence/propagation_analyzer.py), [`decision_optimizer.py`](file:///E:/queue-intelligence/decision_optimizer.py), [`evaluation.py`](file:///E:/queue-intelligence/evaluation.py), [`intelligence_engine.py`](file:///E:/queue-intelligence/intelligence_engine.py) |
+| [**`frontend-backend`**](https://github.com/Aps-psg/Trix/tree/frontend-backend) | **Web Control Tower & REST API** | UI / API Engineering | [`frontend/index.html`](file:///E:/queue-intelligence/frontend/index.html), [`api.py`](file:///E:/queue-intelligence/api.py), [`app.py`](file:///E:/queue-intelligence/app.py) |
 | [**`main-files`**](https://github.com/Aps-psg/Trix/tree/main-files) | **System Integration Drivers** | System Orchestration | [`main.py`](file:///E:/queue-intelligence/main.py), [`queue_intelligence.py`](file:///E:/queue-intelligence/queue_intelligence.py), [`integration_adapter.py`](file:///E:/queue-intelligence/integration_adapter.py), [`sample_data.json`](file:///E:/queue-intelligence/sample_data.json) |
 
 ```bash
 # To switch to any branch locally:
-git checkout frontend-backend
+git checkout person1-simulator
 git checkout core-model
 git checkout intelligence-layer
+git checkout frontend-backend
 git checkout main-files
 git checkout main
 ```
@@ -106,8 +108,12 @@ streamlit run app.py
 QueueFlux is architected into three coordinated technical ownership areas:
 
 ### 👤 Person 1: Queue Simulator & Foundation
-*   Discrete-event simulator generating Poisson arrivals, service completions, and transfer events.
-*   Simulates realistic camera noise, occlusions, and intermittent POS connection dropouts.
+*   [`queueflux/simulator/engine.py`](file:///E:/queue-intelligence/queueflux/simulator/engine.py): High-fidelity Discrete-Event Simulator Engine strictly enforcing physical queue conservation laws $Q_{t+1}^B = \max(0, Q_t^B + A_t - S_t^B)$ and $Q_{t+1}^K = \max(0, Q_t^K + E_t - S_t^K)$.
+*   [`queueflux/simulator/generator.py`](file:///E:/queue-intelligence/queueflux/simulator/generator.py): Tonic Synthetic Data Generator generating realistic 30-day canteen log datasets (`data/synthetic_canteen_30d.csv`).
+*   [`queueflux/models/entities.py`](file:///E:/queue-intelligence/queueflux/models/entities.py) & [`queueflux/models/state.py`](file:///E:/queue-intelligence/queueflux/models/state.py): Formal schemas for `Customer`, `Order`, `Resource`, `SystemState`, and `ObservationVector`.
+*   [`run_demo.py`](file:///E:/queue-intelligence/run_demo.py): Standalone interactive demonstration of simulator transitions under disruptions.
+*   [`visualize_results.py`](file:///E:/queue-intelligence/visualize_results.py): Matplotlib figure generator for state estimation, fan charts, and propagation shocks.
+*   [`tests/test_queueflux.py`](file:///E:/queue-intelligence/tests/test_queueflux.py): 6 unit tests verifying conservation laws, zero-leakage state separation, and workload consistency.
 
 ### 👤 Person 2: Core Model (State Estimation & Prediction)
 *   [`workload_model.py`](file:///E:/queue-intelligence/workload_model.py): **Workload in expected service-minutes** using lognormal/gamma distributions and renewal-theory residual service times: $\mathbb{E}[R] = \frac{\mu}{2}(1 + C_v^2)$.
@@ -198,13 +204,16 @@ python queue_intelligence.py --propagation
 
 ### 6. Run Comprehensive Unit Test Suites
 ```bash
-# Run all tests across the repository
+# Run all 34 tests across the entire repository
 pytest -v
 
-# Run Person 2 tests
+# Run Person 1 simulator tests (6 tests)
+pytest tests/test_queueflux.py -v
+
+# Run Person 2 core model tests (12 tests)
 pytest test_person2.py -v
 
-# Run Person 3 integration tests
+# Run Person 3 intelligence layer tests (16 tests)
 python -m unittest test_intelligence.py -v
 ```
 
@@ -228,10 +237,29 @@ python -m unittest test_intelligence.py -v
 
 ```
 queue-intelligence/
+├── queueflux/               # [Person 1] Modular QueueFlux Package
+│   ├── simulator/           # Discrete-event engine (engine.py) & synthetic data generator (generator.py)
+│   ├── models/              # Entity models (entities.py) and state representations (state.py)
+│   ├── estimator/           # Queue state estimator implementation (state_estimator.py)
+│   ├── predictor/           # Waiting time predictor & forecaster
+│   ├── propagation/         # Cross-stage disruption propagation engine
+│   ├── optimizer/           # Resource intervention optimizer
+│   ├── evaluation/          # Benchmark suite
+│   └── config.py            # Global system parameters and default constants
+├── data/                    # [Person 1] 30-Day Synthetic Dataset & Publication Figures
+│   ├── synthetic_canteen_30d.csv      # 30-day synthetic customer arrival & queue trace (3.4 MB)
+│   ├── disruption_events_30d.json     # Chronological disruption events registry
+│   ├── tonic_metadata_30d.json        # Data generation metadata
+│   ├── benchmark_results_summary.csv  # Baseline evaluation records
+│   └── figure1-4_*.png                # State estimation, forecast, propagation & benchmark plots
 ├── frontend/
 │   └── index.html           # Modern responsive Canteen Digital Twin UI (Tailwind + Chart.js)
 ├── api.py                   # FastAPI REST backend serving state, simulation steps & static UI
 ├── app.py                   # Comprehensive Streamlit Control Tower & interactive dashboard
+├── run_demo.py              # [Person 1] Interactive 12-hour canteen simulation demonstration
+├── visualize_results.py     # [Person 1] Performance visualization and figure generation script
+├── tests/
+│   └── test_queueflux.py    # [Person 1] 6 unit tests verifying conservation laws & state separation
 ├── workload_model.py        # [Person 2] Service distributions & renewal residual workload
 ├── state_estimator.py       # [Person 2] Bayesian Particle Filter & shared state producer
 ├── wait_predictor.py        # [Person 2] Registration-to-collection waiting-time predictor
@@ -247,7 +275,7 @@ queue-intelligence/
 ├── queue_intelligence.py    # Complete integrated QueueFlux engine & benchmark
 ├── test_intelligence.py     # Verification suite for physical queue balance invariants
 ├── sample_data.json         # Canteen system configuration & scenario definitions
-├── requirements.txt         # Scientific dependencies, FastAPI, Uvicorn, Streamlit, Altair
+├── requirements.txt         # Scientific dependencies, FastAPI, Uvicorn, Streamlit, Altair, Matplotlib
 ├── README.md                # System documentation, UI user guides & mathematical models
 └── .vscode/                 # VS Code launch profiles & tasks for API, Streamlit, and tests
 ```
