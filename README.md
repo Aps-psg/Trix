@@ -1,6 +1,13 @@
 # ⚡ QueueFlux: Propagation-Aware, Uncertainty-Aware Queue Prediction & Control Tower
 
+[![QueueFlux CI](https://github.com/Aps-psg/Trix/actions/workflows/ci.yml/badge.svg)](https://github.com/Aps-psg/Trix/actions/workflows/ci.yml)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAps-psg%2FTrix)
+[![Tests Passing](https://img.shields.io/badge/tests-34%20passed-brightgreen.svg)](https://github.com/Aps-psg/Trix)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://github.com/Aps-psg/Trix)
+
 **QueueFlux** is an original, mathematically grounded computational framework and real-time control tower for estimating queue states, predicting waiting times, forecasting congestion, detecting operational disruptions, and recommending optimal operational interventions in a two-stage service facility (Campus Canteen).
+
+> 📋 **Presentation & Viva Defense**: See the full 5-minute script, speaking roles, and Q&A defense cheat sheet in [**`PRESENTATION_GUIDE.md`**](file:///E:/queue-intelligence/PRESENTATION_GUIDE.md).
 
 ---
 
@@ -84,7 +91,13 @@ A reactive, dark-mode glassmorphic control tower featuring an animated physical 
 # Launch FastAPI server and open http://localhost:8000
 python api.py
 ```
-*(Or double-click `frontend/index.html` directly in any web browser).*
+*(Or double-click `run_web_ui.bat` on Windows, or open `frontend/index.html` directly in any web browser).*
+
+#### 🌐 Instant 1-Click Vercel Deployment
+QueueFlux is pre-configured with [`vercel.json`](file:///E:/queue-intelligence/vercel.json) for zero-config cloud deployment on Vercel:
+1. Click the **[Deploy with Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAps-psg%2FTrix)** button, or go to [vercel.com/new](https://vercel.com/new) and import `Aps-psg/Trix`.
+2. Leave all settings default and click **Deploy**.
+3. Your live Canteen Digital Twin is immediately active worldwide at `https://<your-app>.vercel.app` with complete interactive client-side physics, Chart.js telemetry, and scenario disruption triggers!
 
 ---
 
