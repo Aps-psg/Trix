@@ -7,6 +7,7 @@
 
 **QueueFlux** is an original, mathematically grounded computational framework and real-time control tower for estimating queue states, predicting waiting times, forecasting congestion, detecting operational disruptions, and recommending optimal operational interventions in a two-stage service facility (Campus Canteen).
 
+> 🌐 **Live Vercel Deployment**: [**https://queueflux-control-tower-preethasabhi-2137.vercel.app**](https://queueflux-control-tower-preethasabhi-2137.vercel.app)  
 > 📋 **Presentation & Viva Defense**: See the full 5-minute script, speaking roles, and Q&A defense cheat sheet in [**`PRESENTATION_GUIDE.md`**](file:///E:/queue-intelligence/PRESENTATION_GUIDE.md).
 
 ---
