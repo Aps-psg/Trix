@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QueueFlux — Campus Canteen Queue & Billing Intelligence</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono (Figma Design System) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#1e1b4b',
+              950: '#0f0e26',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      box-sizing: border-box;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace !important;
+    }
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      min-height: 100vh;
+    }
+
+    /* ── FIGMA ELEVATION & SURFACES ── */
+    .figma-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 4px 12px 0 rgba(15, 23, 42, 0.03);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .figma-card:hover {
+      box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 10px 24px -2px rgba(15, 23, 42, 0.05);
+    }
+    .figma-input {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .figma-input:focus {
+      background: #ffffff;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+    }
+
+    /* ── PULSE ANIMATION ── */
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.6; }
+    }
+    .pulse-dot {
+      animation: pulseDot 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    /* ── BADGES ── */
+    .badge-emerald {
+      background-color: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .badge-amber {
+      background-color: #fffbeb;
+      color: #b45309;
+      border: 1px solid #fde68a;
+    }
+    .badge-rose {
+      background-color: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen bg-slate-50 antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- ===================================================================== -->
+  <!-- SCREEN 1: FIGMA-STYLE FULL LOGIN & AUTHENTICATION (DEFAULT VIEW)     -->
+  <!-- ===================================================================== -->
+  <div id="screenLogin" class="min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950 relative overflow-hidden">
+    
+    <!-- Ambient Background Glows -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-10 right-10 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Login Container Card -->
+    <div class="w-full max-w-lg bg-white/95 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 relative z-10 space-y-6">
+      
+      <!-- Brand Header -->
+      <div class="text-center space-y-2">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold tracking-wide">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+          <span>CAMPUS CANTEEN LIVE NETWORK</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">QueueFlux</h1>
+        <p class="text-xs sm:text-sm text-slate-500 font-medium">Real-Time Queue State Estimation & Wait-Time Engine</p>
+      </div>
+
+      <!-- Segmented Role Selector -->
+      <div class="bg-slate-100 p-1.5 rounded-2xl grid grid-cols-4 gap-1 text-xs font-bold text-slate-600">
+        <button type="button" onclick="selectLoginRole('student')" id="tabRoleStudent" class="py-2.5 rounded-xl bg-white text-indigo-700 shadow-sm transition-all text-center flex flex-col sm:flex-row items-center justify-center gap-1">
+          <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+          <span>Student</span>
+        </button>
+        <button type="button" onclick="selectLoginRole('billing')" id="tabRoleBilling" class="py-2.5 rounded-xl hover:text-slate-900 transition-all text-center flex flex-col sm:flex-row items-center justify-center gap-1">
+          <i data-lucide="receipt" class="w-4 h-4"></i>
+          <span>Billing</span>
+        </button>
+        <button type="button" onclick="selectLoginRole('kitchen')" id="tabRoleKitchen" class="py-2.5 rounded-xl hover:text-slate-900 transition-all text-center flex flex-col sm:flex-row items-center justify-center gap-1">
+          <i data-lucide="flame" class="w-4 h-4"></i>
+          <span>Kitchen</span>
+        </button>
+        <button type="button" onclick="selectLoginRole('manager')" id="tabRoleManager" class="py-2.5 rounded-xl hover:text-slate-900 transition-all text-center flex flex-col sm:flex-row items-center justify-center gap-1">
+          <i data-lucide="cpu" class="w-4 h-4"></i>
+          <span>AI Tower</span>
+        </button>
+      </div>
+
+      <!-- Form: Student Login -->
+      <div id="formStudent" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Student Full Name</label>
+          <input type="text" id="loginStudentName" value="Alex Chen" placeholder="e.g. Alex Chen" class="w-full figma-input">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">College Roll Number</label>
+          <input type="text" id="loginStudentRoll" value="24CS108" placeholder="e.g. 24CS108 or 21EC042" class="w-full figma-input font-mono font-bold uppercase tracking-wider text-indigo-700">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Department / Branch</label>
+          <select id="loginStudentDept" class="w-full figma-input font-medium cursor-pointer">
+            <option value="Computer Science & Engineering">💻 Computer Science & Engineering</option>
+            <option value="Electronics & Communication">📡 Electronics & Communication</option>
+            <option value="AI & Data Science">🤖 AI & Data Science</option>
+            <option value="Mechanical Engineering">⚙️ Mechanical Engineering</option>
+            <option value="Information Technology">🖥️ Information Technology</option>
+          </select>
+        </div>
+
+        <!-- 1-Click Demo Student Chips -->
+        <div class="pt-1">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Quick 1-Click Demo Students:</span>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="setDemoStudent('Alex Chen', '24CS108')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-xs font-semibold transition-all">Alex (24CS108)</button>
+            <button type="button" onclick="setDemoStudent('Pooja Sundaram', '23EC041')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-xs font-semibold transition-all">Pooja (23EC041)</button>
+            <button type="button" onclick="setDemoStudent('Rohan Mehta', '22ME019')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-xs font-semibold transition-all">Rohan (22ME019)</button>
+          </div>
+        </div>
+
+        <button type="button" onclick="submitStudentLogin()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center space-x-2 cursor-pointer mt-2">
+          <i data-lucide="sparkles" class="w-4 h-4 text-emerald-300"></i>
+          <span>Generate Student UID & Enter Canteen</span>
+        </button>
+      </div>
+
+      <!-- Form: Staff / POS / Kitchen / Manager Login (Dynamic) -->
+      <div id="formStaff" class="hidden space-y-4">
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+          <div class="flex items-center space-x-2 text-indigo-700">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+            <h3 class="text-sm font-bold" id="staffRoleTitle">Staff Access</h3>
+          </div>
+          <p class="text-xs text-slate-500" id="staffRoleDesc">Directly enter the operational interface.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Staff Identifier</label>
+          <input type="text" id="loginStaffName" value="Cashier Counter #1" class="w-full figma-input font-medium">
+        </div>
+
+        <button type="button" onclick="submitStaffLogin()" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center space-x-2 cursor-pointer">
+          <i data-lucide="arrow-right" class="w-4 h-4 text-emerald-400"></i>
+          <span>Launch Console →</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Footer Viva / Project Info -->
+    <p class="text-center text-xs text-slate-400 mt-6 font-medium">
+      QueueFlux Multi-Agent Queue Intelligence Framework · Person 1, Person 2, Person 3
+    </p>
+
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- SCREEN 2: MAIN APPLICATION DASHBOARD (POST-LOGIN)                     -->
+  <!-- ===================================================================== -->
+  <div id="screenApp" class="hidden min-h-screen flex flex-col">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-4 sm:px-8 py-3 shadow-xs">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        
+        <!-- Logo -->
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-100">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-base font-extrabold text-slate-900 tracking-tight">QueueFlux</h2>
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Live</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role Nav Switcher (Top Center) -->
+        <div class="hidden md:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+          <button type="button" onclick="switchAppView('student')" id="navAppStudent" class="px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-xs flex items-center space-x-1.5">
+            <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+            <span>Student App</span>
+          </button>
+          <button type="button" onclick="switchAppView('billing')" id="navAppBilling" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
+            <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+            <span>Billing POS</span>
+          </button>
+          <button type="button" onclick="switchAppView('kitchen')" id="navAppKitchen" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
+            <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+            <span>Kitchen</span>
+          </button>
+          <button type="button" onclick="switchAppView('manager')" id="navAppManager" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
+            <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+            <span>AI Control Tower</span>
+          </button>
+        </div>
+
+        <!-- User Identity Chip & Clock -->
+        <div class="flex items-center space-x-3">
+          <div class="hidden sm:flex items-center space-x-1.5 text-xs font-mono text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span id="appLiveClock">12:30:00 PM</span>
+          </div>
+
+          <!-- Logged In User Chip -->
+          <div class="flex items-center space-x-2 pl-2 border-l border-slate-200">
+            <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs" id="appUserAvatar">🎓</div>
+            <div class="text-left">
+              <div class="flex items-center space-x-1.5">
+                <span id="appUserName" class="text-xs font-bold text-slate-900">Alex Chen</span>
+                <span id="appUserRoll" class="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1 py-0.2 rounded">24CS108</span>
+              </div>
+              <p id="appUserUid" class="text-[10px] text-slate-500 font-mono">UID: STU-24CS108-8421</p>
+            </div>
+            <button type="button" onclick="logoutToLoginScreen()" title="Logout / Switch User" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-all text-xs">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- APP MAIN CONTENT AREA -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+      <!-- ================================================================= -->
+      <!-- VIEW A: STUDENT CONSUMER APP FLOW                                 -->
+      <!-- ================================================================= -->
+      <div id="viewStudent" class="space-y-6">
+
+        <!-- 1. HERO BILLING COUNTER LIVE TELEMETRY CARD -->
+        <div class="figma-card p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl space-y-4 border-indigo-900">
+          
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            
+            <div class="space-y-2">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-dot"></span>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-200">Billing Counter Live Telemetry</span>
+                <span id="billingStatusBadge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  🟢 NORMAL CHECKOUT FLOW
+                </span>
+              </div>
+
+              <h2 class="text-2xl sm:text-4xl font-black tracking-tight font-sans">
+                Estimated Billing Wait: <span id="heroBillingWait" class="text-emerald-400 font-mono">~3.6 mins</span>
+              </h2>
+
+              <p class="text-xs text-indigo-200 flex items-center space-x-2">
+                <span>Line Position: <b id="heroQueuePos" class="text-white font-mono">#5 in line</b></span>
+                <span>•</span>
+                <span>Assigned Counter: <b id="heroCounterNum" class="text-white font-mono">Billing Counter #1</b></span>
+              </p>
+            </div>
+
+            <!-- Telemetry Metrics Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 text-xs font-medium">
+              <div class="text-center sm:text-left">
+                <span class="text-[10px] text-indigo-200 block uppercase">Queue Length</span>
+                <span id="heroQueueLength" class="text-xl font-black text-white font-mono">4</span>
+                <span class="text-[10px] text-indigo-300 block">people ahead</span>
+              </div>
+              <div class="text-center sm:text-left">
+                <span class="text-[10px] text-indigo-200 block uppercase">Open Counters</span>
+                <span id="heroActiveCounters" class="text-xl font-black text-white font-mono">2</span>
+                <span class="text-[10px] text-indigo-300 block">cashiers open</span>
+              </div>
+              <div class="text-center sm:text-left">
+                <span class="text-[10px] text-indigo-200 block uppercase">Service Speed</span>
+                <span id="heroServiceSpeed" class="text-xl font-black text-white font-mono">1.2</span>
+                <span class="text-[10px] text-indigo-300 block">min / person</span>
+              </div>
+              <div class="text-center sm:text-left">
+                <span class="text-[10px] text-indigo-200 block uppercase">Throughput</span>
+                <span id="heroThroughput" class="text-xl font-black text-emerald-400 font-mono">1.67</span>
+                <span class="text-[10px] text-indigo-300 block">cust / min</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Formula Bar & Interactive Tester -->
+          <div class="pt-3.5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-indigo-200 gap-2">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="info" class="w-4 h-4 text-indigo-300 shrink-0"></i>
+              <span>Live Formula: <code id="heroFormulaDisplay" class="bg-black/40 px-2.5 py-1 rounded-md font-mono text-white text-[11px]">(4 queue + 1) ÷ (2 cnt × 0.83) = 3.6 mins</code></span>
+            </div>
+            <button type="button" onclick="toggleBillingSimulator()" class="text-xs text-indigo-300 hover:text-white underline font-bold flex items-center space-x-1 cursor-pointer">
+              <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+              <span>Test Live Counter Inputs</span>
+            </button>
+          </div>
+
+          <!-- Expandable Tester Slider -->
+          <div id="billingSimulatorWidget" class="hidden p-4 bg-slate-900/95 rounded-2xl border border-indigo-500/40 space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div>
+                <div class="flex justify-between mb-1 text-slate-300">
+                  <span>Adjust Queue Backlog:</span>
+                  <span id="sliderQueueVal" class="font-bold text-emerald-400 font-mono">4</span>
+                </div>
+                <input type="range" id="simQueueSlider" min="0" max="25" value="4" oninput="onSimulatorSliderChange()" class="w-full accent-indigo-500">
+              </div>
+              <div>
+                <span class="text-slate-300 block mb-1">Active Cashier Counters:</span>
+                <div class="flex space-x-1.5">
+                  <button type="button" onclick="setSimCounters(1)" id="btnSimCnt1" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-bold">1</button>
+                  <button type="button" onclick="setSimCounters(2)" id="btnSimCnt2" class="flex-1 py-1.5 rounded-lg bg-indigo-600 text-white font-bold">2</button>
+                  <button type="button" onclick="setSimCounters(3)" id="btnSimCnt3" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-bold">3</button>
+                  <button type="button" onclick="setSimCounters(4)" id="btnSimCnt4" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-bold">4</button>
+                </div>
+              </div>
+              <div class="flex items-end space-x-2">
+                <button type="button" onclick="adjustSimQueue(1)" class="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center space-x-1">
+                  <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                  <span>+1 Person</span>
+                </button>
+                <button type="button" onclick="adjustSimQueue(-1)" class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center space-x-1">
+                  <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                  <span>-1 Served</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2. MAIN APP FLOW: FOOD MENU (LEFT 7) + ORDER TICKETING (RIGHT 5) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          <!-- Left: Food Catalog -->
+          <div class="lg:col-span-7 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-2">
+                <i data-lucide="utensils" class="w-4 h-4 text-indigo-600"></i>
+                <span>Canteen Menu Catalog</span>
+              </h3>
+              <span class="text-xs text-slate-500 font-medium">Stage B Kitchen Prep Times</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" id="menuGrid">
+              <!-- Rendered via JavaScript -->
+            </div>
+          </div>
+
+          <!-- Right: Journey Time Calculation & Digital Token -->
+          <div class="lg:col-span-5 space-y-4">
+            
+            <!-- Calculation Breakdown Card -->
+            <div class="figma-card p-5 space-y-4 border-indigo-100">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <i data-lucide="calculator" class="w-4 h-4 text-indigo-600"></i>
+                  Journey Wait Calculation
+                </h4>
+                <span id="estCongestionBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full badge-emerald">
+                  Normal Flow
+                </span>
+              </div>
+
+              <!-- 2 Stages Breakdown -->
+              <div class="space-y-2.5 text-xs">
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <div class="flex items-center space-x-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">1</div>
+                    <div>
+                      <span class="font-bold text-slate-900 block">Stage A: Billing Counter</span>
+                      <span class="text-[10px] text-slate-500">Queue wait + Cashier checkout</span>
+                    </div>
+                  </div>
+                  <span id="estBillingWait" class="font-bold text-indigo-700 font-mono text-sm">3.6 mins</span>
+                </div>
+
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <div class="flex items-center space-x-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">2</div>
+                    <div>
+                      <span class="font-bold text-slate-900 block">Stage B: Kitchen Prep</span>
+                      <span class="text-[10px] text-slate-500">Food preparation & packaging</span>
+                    </div>
+                  </div>
+                  <span id="estKitchenPrep" class="font-bold text-amber-700 font-mono text-sm">5.0 mins</span>
+                </div>
+              </div>
+
+              <!-- Total Combined Hero -->
+              <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 rounded-2xl text-white text-center">
+                <span class="text-[10px] uppercase tracking-wider text-indigo-300 font-bold">Total Estimated Time Until Pickup</span>
+                <div class="text-3xl font-black text-emerald-400 font-mono mt-0.5" id="estTotalWaitDisplay">~8.6 mins</div>
+                <p class="text-xs text-indigo-200 mt-1">Expected Ready Time: <span id="estReadyTimeDisplay" class="font-bold font-mono text-white">12:38 PM</span></p>
+              </div>
+
+              <!-- Place Order Button -->
+              <button type="button" id="btnPlaceOrder" onclick="submitConsumerOrder()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center space-x-2 cursor-pointer">
+                <i data-lucide="ticket" class="w-4 h-4 text-emerald-300"></i>
+                <span>Generate Queue Token & Confirm Order</span>
+              </button>
+            </div>
+
+            <!-- Active Digital Token Container -->
+            <div id="activeTicketContainer" class="hidden figma-card p-5 border-emerald-300 bg-emerald-50/30 space-y-4">
+              <div class="flex justify-between items-start border-b border-emerald-200 pb-3">
+                <div>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800">Your Live Queue Token</span>
+                  <h4 id="ticketOrderId" class="text-xl font-black text-slate-900 font-mono mt-0.5">#TOKEN-24CS-104</h4>
+                  <p class="text-xs text-slate-600 font-medium mt-0.5">
+                    Student: <b id="ticketStudentName">Alex Chen</b> • <span id="ticketStudentUid" class="font-mono text-emerald-800 font-bold">UID: STU-24CS108-8421</span>
+                  </p>
+                </div>
+                <span id="ticketStatusBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-600 text-white shadow-xs">
+                  1. In Billing Line
+                </span>
+              </div>
+
+              <!-- Stepper -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-[11px] font-bold text-slate-600">
+                  <span>1. Issued</span>
+                  <span>2. At Billing</span>
+                  <span>3. Cooking</span>
+                  <span>4. Ready 🔔</span>
+                </div>
+                <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                  <div id="ticketProgressBar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 25%"></div>
+                </div>
+              </div>
+
+              <!-- Countdown -->
+              <div class="bg-white p-3.5 rounded-xl border border-emerald-200 flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-slate-500 block uppercase font-bold">Assigned Counter</span>
+                  <span id="ticketCounter" class="text-sm font-bold text-slate-900 font-mono">Billing Counter #1</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-slate-500 block uppercase font-bold">Estimated Pickup In</span>
+                  <span id="ticketCountdown" class="text-lg font-black text-emerald-700 font-mono">08:20</span>
+                </div>
+              </div>
+
+              <button type="button" onclick="advanceActiveTicketDemo()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all">
+                <i data-lucide="fast-forward" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Advance Order Lifecycle (Demo Simulation)</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ================================================================= -->
+      <!-- VIEW B: BILLING COUNTER POS CONSOLE                               -->
+      <!-- ================================================================= -->
+      <div id="viewBilling" class="hidden space-y-6">
+        <div class="figma-card p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Billing Counter & POS Console</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Manage customer checkout queue and update active counters.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button type="button" onclick="staffServeNextCustomer()" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs">
+              ✓ Serve Next Customer
+            </button>
+            <button type="button" onclick="staffAddCustomer()" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs">
+              +1 Walk-in Customer
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="figma-card p-4 space-y-3 border-t-4 border-indigo-500">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+              <h4 class="text-xs font-bold uppercase text-slate-700">Waiting Billing</h4>
+              <span id="staffCountBilling" class="text-xs font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono">0</span>
+            </div>
+            <div id="staffBillingOrdersList" class="space-y-2 max-h-96 overflow-y-auto"></div>
+          </div>
+
+          <div class="figma-card p-4 space-y-3 border-t-4 border-amber-500">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+              <h4 class="text-xs font-bold uppercase text-slate-700">Kitchen Cooking</h4>
+              <span id="staffCountKitchen" class="text-xs font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-mono">0</span>
+            </div>
+            <div id="staffKitchenOrdersList" class="space-y-2 max-h-96 overflow-y-auto"></div>
+          </div>
+
+          <div class="figma-card p-4 space-y-3 border-t-4 border-emerald-500">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+              <h4 class="text-xs font-bold uppercase text-slate-700">Ready for Pickup</h4>
+              <span id="staffCountReady" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono">0</span>
+            </div>
+            <div id="staffReadyOrdersList" class="space-y-2 max-h-96 overflow-y-auto"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================================================================= -->
+      <!-- VIEW C: KITCHEN DISPLAY SYSTEM                                    -->
+      <!-- ================================================================= -->
+      <div id="viewKitchen" class="hidden space-y-6">
+        <div class="figma-card p-5 bg-gradient-to-r from-amber-900 to-slate-900 text-white">
+          <h3 class="text-base font-bold">Kitchen Chef Display System</h3>
+          <p class="text-xs text-amber-200 mt-1">Live food preparation queue sorted by order timestamp.</p>
+        </div>
+        <div id="kitchenLiveGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+
+
+      <!-- ================================================================= -->
+      <!-- VIEW D: AI CONTROL TOWER (PERSON 1 & PERSON 2)                    -->
+      <!-- ================================================================= -->
+      <div id="viewManager" class="hidden space-y-6">
+        
+        <div class="figma-card p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Multi-Agent Queue Intelligence Tower</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Person 1 ML Forecasting + Person 2 Real-Time Optimization.</p>
+          </div>
+          <div class="flex items-center space-x-2 text-xs font-bold">
+            <button type="button" onclick="triggerDisruptionScenario('NORMAL')" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">Normal</button>
+            <button type="button" onclick="triggerDisruptionScenario('HIGH_DEMAND')" class="px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-800">Rush Surge</button>
+            <button type="button" onclick="triggerDisruptionScenario('SLOW_SERVICE')" class="px-3 py-1.5 rounded-lg border border-rose-300 bg-rose-50 text-rose-800">Slow POS</button>
+            <button type="button" onclick="triggerDisruptionScenario('COUNTER_IMBALANCE')" class="px-3 py-1.5 rounded-lg border border-purple-300 bg-purple-50 text-purple-800">1 Counter</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          
+          <!-- Person 2 Intelligence Card -->
+          <div class="lg:col-span-6 figma-card p-5 space-y-4">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+              <h4 class="text-xs font-bold uppercase text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-indigo-600"></i>
+                Person 2: Root-Cause Detection & Intervention
+              </h4>
+              <span id="mgrCauseBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono">NORMAL</span>
+            </div>
+
+            <div class="bg-indigo-50/60 rounded-2xl p-4 border border-indigo-100 space-y-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-900">Recommended Intervention</span>
+              <h5 id="mgrRecAction" class="text-lg font-black text-indigo-700 font-mono">NO_ACTION</h5>
+              <p id="mgrActionExplain" class="text-xs text-slate-600">Maintain current server staffing. Queue flow is stable.</p>
+              <div class="pt-2 flex justify-between items-center text-xs">
+                <span class="text-emerald-700 font-bold">Estimated Savings: <b id="mgrSavingsPct">0.0%</b></span>
+                <button type="button" onclick="applyManagerRecommendation()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold">Apply</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Person 1 ML 5-Min Forecast Chart -->
+          <div class="lg:col-span-6 figma-card p-5 space-y-3">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+              <h4 class="text-xs font-bold uppercase text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="trending-up" class="w-4 h-4 text-indigo-600"></i>
+                Person 1: 5-Minute Ahead Forecast (t+1 ... t+5)
+              </h4>
+              <span class="text-[10px] text-slate-500 font-mono">Horizon: 5 min</span>
+            </div>
+            <div class="h-56 w-full">
+              <canvas id="chartForecast5Min"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT MASTER APPLICATION LOGIC                                   -->
+  <!-- ===================================================================== -->
+  <script>
+    // --- Application State ---
+    let currentUser = {
+      name: 'Alex Chen',
+      roll_no: '24CS108',
+      uid: 'STU-24CS108-8421',
+      department: 'Computer Science & Engineering',
+      role: 'STUDENT',
+      avatar: '🎓'
+    };
+
+    let billingState = {
+      queue_length: 4,
+      active_counters: 2,
+      avg_service_time: 1.2,
+      arrival_rate: 3.5,
+      disruption_mode: 'NORMAL'
+    };
+
+    let menuItems = [
+      { id: 'item_bev_1', name: '☕ South Indian Filter Coffee', category: 'BEVERAGE', price: 25.0, base_prep_time_min: 1.2, description: 'Freshly brewed chicory coffee. 1-min pickup.' },
+      { id: 'item_snk_1', name: '🥪 Grilled Veg Cheese Sandwich', category: 'SNACK', price: 60.0, base_prep_time_min: 2.5, description: 'Toasted multigrain bread with vegetables and cheese.' },
+      { id: 'item_meal_1', name: '🍱 Executive Lunch Thali', category: 'MEAL', price: 95.0, base_prep_time_min: 5.0, description: 'Basmati rice, paneer butter masala, dal fry & 2 rotis.' },
+      { id: 'item_combo_1', name: '🍛 Campus Rush Hour Combo Box', category: 'COMBO', price: 120.0, base_prep_time_min: 7.5, description: 'Full lunch box with samosa snack and cold beverage.' }
+    ];
+
+    let cart = { 'item_meal_1': 1 };
+    let activeTicket = null;
+    let ticketCountdownSec = 512;
+    let currentAppView = 'student';
+    let selectedLoginRole = 'student';
+    let forecastChart = null;
+
+    let staffOrders = [
+      { order_id: 'ORD-4011', student_name: 'Pooja Sundaram', roll_no: '23EC041', uid: 'STU-23EC041-3912', item_summary: '🍱 Thali (1)', status: 'WAITING_BILLING', total_wait_min: 8.5 },
+      { order_id: 'ORD-4012', student_name: 'Rohan Mehta', roll_no: '22ME019', uid: 'STU-22ME019-8172', item_summary: '🥪 Sandwich (1)', status: 'PREPARING', total_wait_min: 5.2 },
+      { order_id: 'ORD-4013', student_name: 'Deepak Rao', roll_no: '24CS088', uid: 'STU-24CS088-1294', item_summary: '☕ Coffee (2)', status: 'READY', total_wait_min: 2.0 }
+    ];
+
+    // --- Init on DOM Load ---
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      renderMenu();
+      recalculateRealTimeWait();
+      initChart();
+      updateStaffOrdersUI();
+
+      // Second-by-second countdown for active ticket
+      setInterval(() => {
+        if (activeTicket && ticketCountdownSec > 0) {
+          ticketCountdownSec--;
+          const m = Math.floor(ticketCountdownSec / 60);
+          const s = ticketCountdownSec % 60;
+          const el = document.getElementById('ticketCountdown');
+          if (el) el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+      }, 1000);
+
+      // Background telemetry sync
+      setInterval(syncTelemetryWithServer, 4000);
+    });
+
+    function updateClock() {
+      const now = new Date();
+      const str = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const el = document.getElementById('appLiveClock');
+      if (el) el.textContent = str;
+    }
+
+    // --- Role Picker in Login Screen ---
+    function selectLoginRole(role) {
+      selectedLoginRole = role;
+      const roles = ['student', 'billing', 'kitchen', 'manager'];
+      roles.forEach(r => {
+        const btn = document.getElementById(`tabRole${r.charAt(0).toUpperCase() + r.slice(1)}`);
+        if (r === role) {
+          btn.className = "py-2.5 rounded-xl bg-white text-indigo-700 shadow-sm transition-all text-center flex flex-col sm:flex-row items-center justify-center gap-1 font-bold";
+        } else {
+          btn.className = "py-2.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all text-center flex flex-col sm:flex-row items-center justify-center gap-1 font-bold";
+        }
+      });
+
+      const formStudent = document.getElementById('formStudent');
+      const formStaff = document.getElementById('formStaff');
+
+      if (role === 'student') {
+        formStudent.classList.remove('hidden');
+        formStaff.classList.add('hidden');
+      } else {
+        formStudent.classList.add('hidden');
+        formStaff.classList.remove('hidden');
+        const titleEl = document.getElementById('staffRoleTitle');
+        const descEl = document.getElementById('staffRoleDesc');
+        const nameEl = document.getElementById('loginStaffName');
+
+        if (role === 'billing') {
+          titleEl.textContent = 'Billing Counter POS Operator';
+          descEl.textContent = 'Manage cashier lines, serve tokens, and update open counter counts.';
+          nameEl.value = 'Cashier Station #1';
+        } else if (role === 'kitchen') {
+          titleEl.textContent = 'Kitchen Station Display';
+          descEl.textContent = 'Live order queue display for chefs and cooking staff.';
+          nameEl.value = 'Kitchen Master Station';
+        } else if (role === 'manager') {
+          titleEl.textContent = 'Canteen Manager & AI Control Tower';
+          descEl.textContent = 'Person 1 ML forecasts, Person 2 diagnostics, and decision optimizer.';
+          nameEl.value = 'Dr. K. Sharma (Canteen Manager)';
+        }
+      }
+      lucide.createIcons();
+    }
+
+    function setDemoStudent(name, roll) {
+      document.getElementById('loginStudentName').value = name;
+      document.getElementById('loginStudentRoll').value = roll;
+    }
+
+    // --- Submit Login ---
+    function submitStudentLogin() {
+      const name = document.getElementById('loginStudentName').value.trim();
+      const roll = document.getElementById('loginStudentRoll').value.trim().toUpperCase();
+      const dept = document.getElementById('loginStudentDept').value;
+
+      if (!name || !roll) {
+        alert("Please enter Name and College Roll Number.");
+        return;
+      }
+
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      currentUser = {
+        name: name,
+        roll_no: roll,
+        uid: `STU-${roll}-${randomSuffix}`,
+        department: dept,
+        role: 'STUDENT',
+        avatar: '🎓'
+      };
+
+      // Non-blocking backend registration
+      try {
+        fetch('/api/auth/register-student', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roll_no: roll, name: name, department: dept })
+        });
+      } catch (e) {}
+
+      enterAppScreen('student');
+    }
+
+    function submitStaffLogin() {
+      const name = document.getElementById('loginStaffName').value.trim() || 'Staff User';
+      currentUser = {
+        name: name,
+        roll_no: 'STAFF',
+        uid: `STAFF-${selectedLoginRole.toUpperCase()}`,
+        department: 'Canteen Operations',
+        role: selectedLoginRole.toUpperCase(),
+        avatar: selectedLoginRole === 'billing' ? '💳' : (selectedLoginRole === 'kitchen' ? '🍳' : '📊')
+      };
+      enterAppScreen(selectedLoginRole);
+    }
+
+    function enterAppScreen(initialView) {
+      document.getElementById('screenLogin').classList.add('hidden');
+      document.getElementById('screenApp').classList.remove('hidden');
+
+      document.getElementById('appUserName').textContent = currentUser.name;
+      document.getElementById('appUserRoll').textContent = currentUser.roll_no;
+      document.getElementById('appUserUid').textContent = currentUser.uid;
+      document.getElementById('appUserAvatar').textContent = currentUser.avatar;
+
+      switchAppView(initialView || 'student');
+    }
+
+    function logoutToLoginScreen() {
+      document.getElementById('screenApp').classList.add('hidden');
+      document.getElementById('screenLogin').classList.remove('hidden');
+      selectLoginRole('student');
+    }
+
+    // --- Switch App Views Inside Dashboard ---
+    function switchAppView(view) {
+      currentAppView = view;
+      const views = ['student', 'billing', 'kitchen', 'manager'];
+      views.forEach(v => {
+        const viewEl = document.getElementById(`view${v.charAt(0).toUpperCase() + v.slice(1)}`);
+        const navBtn = document.getElementById(`navApp${v.charAt(0).toUpperCase() + v.slice(1)}`);
+        if (v === view) {
+          if (viewEl) viewEl.classList.remove('hidden');
+          if (navBtn) navBtn.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-xs flex items-center space-x-1.5 font-bold";
+        } else {
+          if (viewEl) viewEl.classList.add('hidden');
+          if (navBtn) navBtn.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 font-bold";
+        }
+      });
+
+      if (view === 'student') recalculateRealTimeWait();
+      if (view === 'billing') updateStaffOrdersUI();
+      if (view === 'kitchen') renderKitchenGrid();
+      if (view === 'manager') updateManagerView();
+      lucide.createIcons();
+    }
+
+    // --- Real-Time Wait-Time Calculation Engine ---
+    function recalculateRealTimeWait() {
+      const q = billingState.queue_length;
+      const c = billingState.active_counters;
+      const st = billingState.avg_service_time;
+
+      const ratePerCounter = 1.0 / Math.max(0.2, st);
+      const totalThroughput = c * ratePerCounter;
+      const billingWaitMin = (q + 1) / Math.max(0.1, totalThroughput);
+
+      let maxPrep = 0, totalQty = 0;
+      for (const [id, qty] of Object.entries(cart)) {
+        if (qty > 0) {
+          const item = menuItems.find(m => m.id === id);
+          if (item) {
+            maxPrep = Math.max(maxPrep, item.base_prep_time_min);
+            totalQty += qty;
+          }
+        }
+      }
+      if (totalQty === 0) { maxPrep = 5.0; totalQty = 1; }
+      const kitchenWaitMin = maxPrep * (1.0 + 0.15 * Math.max(0, totalQty - 1));
+      const totalWaitMin = billingWaitMin + kitchenWaitMin;
+
+      // Update Hero Card Elements
+      document.getElementById('heroBillingWait').textContent = `~${billingWaitMin.toFixed(1)} mins`;
+      document.getElementById('heroQueuePos').textContent = `#${q + 1} in line`;
+      document.getElementById('heroCounterNum').textContent = `Billing Counter #${(q % c) + 1}`;
+      document.getElementById('heroQueueLength').textContent = q;
+      document.getElementById('heroActiveCounters').textContent = c;
+      document.getElementById('heroServiceSpeed').textContent = st.toFixed(1);
+      document.getElementById('heroThroughput').textContent = totalThroughput.toFixed(2);
+      document.getElementById('heroFormulaDisplay').textContent = `(${q} queue + 1) ÷ (${c} cnt × ${ratePerCounter.toFixed(2)} serv/min) = ${billingWaitMin.toFixed(1)} mins`;
+
+      // Update Breakdown Card
+      document.getElementById('estBillingWait').textContent = `${billingWaitMin.toFixed(1)} mins`;
+      document.getElementById('estKitchenPrep').textContent = `${kitchenWaitMin.toFixed(1)} mins`;
+      document.getElementById('estTotalWaitDisplay').textContent = `~${totalWaitMin.toFixed(1)} mins`;
+
+      // Update Ready Clock Time
+      const now = new Date();
+      now.setSeconds(now.getSeconds() + Math.round(totalWaitMin * 60));
+      document.getElementById('estReadyTimeDisplay').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Simulator Sync
+      document.getElementById('sliderQueueVal').textContent = q;
+      document.getElementById('simQueueSlider').value = q;
+
+      // Status Badges
+      const badge = document.getElementById('billingStatusBadge');
+      const estBadge = document.getElementById('estCongestionBadge');
+      if (q > 8) {
+        badge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30";
+        badge.textContent = "🔴 RUSH CONGESTION SURGE";
+        estBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full badge-rose";
+        estBadge.textContent = "Rush Surge";
+      } else if (q > 4) {
+        badge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30";
+        badge.textContent = "🟡 MODERATE QUEUE FLOW";
+        estBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full badge-amber";
+        estBadge.textContent = "Moderate Flow";
+      } else {
+        badge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30";
+        badge.textContent = "🟢 NORMAL CHECKOUT FLOW";
+        estBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full badge-emerald";
+        estBadge.textContent = "Normal Flow";
+      }
+    }
+
+    // --- Simulator Controls ---
+    function toggleBillingSimulator() {
+      const el = document.getElementById('billingSimulatorWidget');
+      el.classList.toggle('hidden');
+      lucide.createIcons();
+    }
+
+    function onSimulatorSliderChange() {
+      billingState.queue_length = parseInt(document.getElementById('simQueueSlider').value, 10);
+      recalculateRealTimeWait();
+    }
+
+    function setSimCounters(cnt) {
+      billingState.active_counters = cnt;
+      [1, 2, 3, 4].forEach(i => {
+        const btn = document.getElementById(`btnSimCnt${i}`);
+        if (i === cnt) {
+          btn.className = "flex-1 py-1.5 rounded-lg bg-indigo-600 text-white font-bold";
+        } else {
+          btn.className = "flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-bold";
+        }
+      });
+      recalculateRealTimeWait();
+    }
+
+    function adjustSimQueue(delta) {
+      billingState.queue_length = Math.max(0, billingState.queue_length + delta);
+      recalculateRealTimeWait();
+    }
+
+    // --- Menu Rendering & Ordering ---
+    function renderMenu() {
+      const container = document.getElementById('menuGrid');
+      container.innerHTML = menuItems.map(item => {
+        const qty = cart[item.id] || 0;
+        return `
+          <div class="figma-card p-4 flex flex-col justify-between ${qty > 0 ? 'border-indigo-400 ring-2 ring-indigo-50' : 'border-slate-200'}">
+            <div>
+              <div class="flex justify-between items-start">
+                <h4 class="font-bold text-sm text-slate-900">${item.name}</h4>
+                <span class="text-xs font-bold text-indigo-700 font-mono">₹${item.price}</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">${item.description}</p>
+              <div class="mt-2.5 flex items-center space-x-1 text-[11px] text-amber-600 font-bold">
+                <i data-lucide="timer" class="w-3.5 h-3.5 text-amber-500"></i>
+                <span>Prep: ~${item.base_prep_time_min} mins</span>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+              <span class="text-xs font-bold text-slate-400">Qty</span>
+              <div class="flex items-center space-x-2">
+                <button type="button" onclick="updateQty('${item.id}', -1)" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">-</button>
+                <span class="font-bold text-sm w-4 text-center text-slate-900 font-mono">${qty}</span>
+                <button type="button" onclick="updateQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function updateQty(id, delta) {
+      cart[id] = Math.max(0, (cart[id] || 0) + delta);
+      renderMenu();
+      recalculateRealTimeWait();
+    }
+
+    function submitConsumerOrder() {
+      const itemsSelected = Object.entries(cart).filter(([_, q]) => q > 0);
+      if (!itemsSelected.length) {
+        alert("Please select at least 1 food item before generating a token.");
+        return;
+      }
+
+      const tokenNum = Math.floor(100 + Math.random() * 900);
+      const orderId = `ORD-${Math.floor(4000 + Math.random() * 900)}`;
+      const assignedCounter = (billingState.queue_length % billingState.active_counters) + 1;
+
+      activeTicket = {
+        order_id: orderId,
+        token_num: `#TOKEN-${currentUser.roll_no}-${tokenNum}`,
+        counter_assigned: assignedCounter,
+        status_step: 1
+      };
+
+      billingState.queue_length += 1;
+      recalculateRealTimeWait();
+
+      document.getElementById('ticketOrderId').textContent = activeTicket.token_num;
+      document.getElementById('ticketStudentName').textContent = currentUser.name;
+      document.getElementById('ticketStudentUid').textContent = `UID: ${currentUser.uid}`;
+      document.getElementById('ticketCounter').textContent = `Billing Counter #${assignedCounter}`;
+      document.getElementById('ticketStatusBadge').textContent = '1. In Billing Line';
+      document.getElementById('ticketProgressBar').style.width = '25%';
+      document.getElementById('activeTicketContainer').classList.remove('hidden');
+
+      ticketCountdownSec = Math.round(parseFloat(document.getElementById('estTotalWaitDisplay').textContent.replace(/[^\d.]/g, '')) * 60);
+
+      staffOrders.unshift({
+        order_id: orderId,
+        student_name: currentUser.name,
+        roll_no: currentUser.roll_no,
+        uid: currentUser.uid,
+        item_summary: `Meal Order (${itemsSelected.length} items)`,
+        status: 'WAITING_BILLING',
+        total_wait_min: (ticketCountdownSec / 60).toFixed(1)
+      });
+      updateStaffOrdersUI();
+
+      try {
+        fetch('/api/consumer/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_id: currentUser.uid,
+            student_name: currentUser.name,
+            items: itemsSelected.map(([id, q]) => ({
+              item_id: id,
+              name: menuItems.find(m => m.id === id).name,
+              category: menuItems.find(m => m.id === id).category,
+              quantity: q,
+              base_prep_time_min: menuItems.find(m => m.id === id).base_prep_time_min,
+              price: menuItems.find(m => m.id === id).price
+            }))
+          })
+        });
+      } catch (e) {}
+
+      lucide.createIcons();
+    }
+
+    function advanceActiveTicketDemo() {
+      if (!activeTicket) return;
+      activeTicket.status_step = (activeTicket.status_step % 4) + 1;
+      const bar = document.getElementById('ticketProgressBar');
+      const badge = document.getElementById('ticketStatusBadge');
+
+      if (activeTicket.status_step === 1) {
+        bar.style.width = '25%';
+        badge.textContent = '1. In Billing Line';
+      } else if (activeTicket.status_step === 2) {
+        bar.style.width = '50%';
+        badge.textContent = '2. At Billing Counter';
+        billingState.queue_length = Math.max(0, billingState.queue_length - 1);
+        recalculateRealTimeWait();
+      } else if (activeTicket.status_step === 3) {
+        bar.style.width = '75%';
+        badge.textContent = '3. Cooking in Kitchen';
+      } else if (activeTicket.status_step === 4) {
+        bar.style.width = '100%';
+        badge.textContent = '4. Ready for Pickup! 🔔';
+        badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-600 text-white animate-pulse';
+        alert(`🔔 Buzzer Ring: Order ${activeTicket.token_num} is READY for pickup at Counter #${activeTicket.counter_assigned}!`);
+      }
+    }
+
+    // --- Staff Console Logic ---
+    function staffServeNextCustomer() {
+      billingState.queue_length = Math.max(0, billingState.queue_length - 1);
+      recalculateRealTimeWait();
+      const waiting = staffOrders.find(o => o.status === 'WAITING_BILLING');
+      if (waiting) {
+        waiting.status = 'PREPARING';
+        updateStaffOrdersUI();
+      }
+    }
+
+    function staffAddCustomer() {
+      billingState.queue_length += 1;
+      recalculateRealTimeWait();
+    }
+
+    function advanceStaffOrder(orderId) {
+      const order = staffOrders.find(o => o.order_id === orderId);
+      if (!order) return;
+      if (order.status === 'WAITING_BILLING') order.status = 'PREPARING';
+      else if (order.status === 'PREPARING') order.status = 'READY';
+      else if (order.status === 'READY') staffOrders = staffOrders.filter(o => o.order_id !== orderId);
+      updateStaffOrdersUI();
+    }
+
+    function updateStaffOrdersUI() {
+      const billingList = document.getElementById('staffBillingOrdersList');
+      const kitchenList = document.getElementById('staffKitchenOrdersList');
+      const readyList = document.getElementById('staffReadyOrdersList');
+
+      const billing = staffOrders.filter(o => o.status === 'WAITING_BILLING');
+      const kitchen = staffOrders.filter(o => o.status === 'PREPARING');
+      const ready = staffOrders.filter(o => o.status === 'READY');
+
+      document.getElementById('staffCountBilling').textContent = billing.length;
+      document.getElementById('staffCountKitchen').textContent = kitchen.length;
+      document.getElementById('staffCountReady').textContent = ready.length;
+
+      billingList.innerHTML = billing.map(o => `
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex justify-between items-center">
+          <div>
+            <div class="font-bold text-slate-900">${o.student_name} <span class="font-mono text-indigo-700">(${o.roll_no})</span></div>
+            <div class="text-[10px] text-slate-500 font-mono">${o.uid}</div>
+          </div>
+          <button type="button" onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-[11px]">Billed → Cook</button>
+        </div>
+      `).join('') || `<p class="text-slate-400 text-xs italic py-2">No students waiting at billing.</p>`;
+
+      kitchenList.innerHTML = kitchen.map(o => `
+        <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-200 text-xs flex justify-between items-center">
+          <div>
+            <div class="font-bold text-slate-900">${o.student_name} <span class="font-mono text-amber-700">(${o.roll_no})</span></div>
+            <div class="text-[10px] text-slate-500 font-mono">${o.uid}</div>
+          </div>
+          <button type="button" onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-[11px]">Cooked → Bell 🔔</button>
+        </div>
+      `).join('') || `<p class="text-slate-400 text-xs italic py-2">Kitchen queue clear.</p>`;
+
+      readyList.innerHTML = ready.map(o => `
+        <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs flex justify-between items-center">
+          <div>
+            <div class="font-bold text-slate-900">${o.student_name} <span class="font-mono text-emerald-700">(${o.roll_no})</span></div>
+            <div class="text-[10px] text-slate-500 font-mono">Buzzer Ringing</div>
+          </div>
+          <button type="button" onclick="advanceStaffOrder('${o.order_id}')" class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold text-[11px]">Picked Up ✓</button>
+        </div>
+      `).join('') || `<p class="text-slate-400 text-xs italic py-2">No food pending pickup.</p>`;
+    }
+
+    function renderKitchenGrid() {
+      const container = document.getElementById('kitchenLiveGrid');
+      const cooking = staffOrders.filter(o => o.status === 'PREPARING');
+      container.innerHTML = cooking.map(o => `
+        <div class="figma-card p-4 border-amber-200 bg-amber-50/20 space-y-2">
+          <div class="flex justify-between items-start">
+            <h4 class="font-black text-sm text-slate-900">${o.student_name}</h4>
+            <span class="font-mono text-xs font-bold text-amber-800">${o.roll_no}</span>
+          </div>
+          <p class="text-xs text-slate-600">${o.item_summary}</p>
+          <div class="pt-2 flex justify-between items-center">
+            <span class="text-[10px] text-slate-500 font-mono">${o.uid}</span>
+            <button type="button" onclick="advanceStaffOrder('${o.order_id}'); renderKitchenGrid();" class="px-3 py-1 bg-emerald-600 text-white font-bold text-xs rounded-lg shadow-xs">
+              Bell Ready 🔔
+            </button>
+          </div>
+        </div>
+      `).join('') || `<p class="text-slate-400 text-xs col-span-3 text-center py-6">No orders currently cooking in kitchen.</p>`;
+    }
+
+    // --- AI Control Tower Chart & Logic ---
+    function initChart() {
+      const ctx = document.getElementById('chartForecast5Min').getContext('2d');
+      forecastChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['t+0', 't+1 min', 't+2 min', 't+3 min', 't+4 min', 't+5 min'],
+          datasets: [
+            {
+              label: 'Person 1 ML Prediction',
+              data: [4, 5, 6, 7, 6, 5],
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79, 70, 229, 0.08)',
+              borderWidth: 2.5,
+              tension: 0.3,
+              fill: true
+            },
+            {
+              label: 'Moving Avg Baseline',
+              data: [4, 4.2, 4.5, 4.8, 5.0, 5.2],
+              borderColor: '#94a3b8',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              tension: 0.2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } },
+          scales: {
+            y: { title: { display: true, text: 'Queue (Persons)', font: { size: 10 } }, min: 0 }
+          }
+        }
+      });
+    }
+
+    function updateManagerView() {
+      if (forecastChart) {
+        const q = billingState.queue_length;
+        forecastChart.data.datasets[0].data = [q, q + 1, q + 2, q + 2, q + 1, q];
+        forecastChart.data.datasets[1].data = [q, q + 0.3, q + 0.6, q + 0.9, q + 1.2, q + 1.4];
+        forecastChart.update();
+      }
+    }
+
+    function triggerDisruptionScenario(type) {
+      billingState.disruption_mode = type;
+      const rec = document.getElementById('mgrRecAction');
+      const exp = document.getElementById('mgrActionExplain');
+      const sav = document.getElementById('mgrSavingsPct');
+      const badge = document.getElementById('mgrCauseBadge');
+
+      if (type === 'HIGH_DEMAND') {
+        billingState.queue_length = 12;
+        badge.textContent = 'HIGH_DEMAND';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-mono';
+        rec.textContent = 'OPEN_EXTRA_BILLING_COUNTER';
+        exp.textContent = 'Arrival surge detected. Open Counter #3 immediately.';
+        sav.textContent = '38.4%';
+      } else if (type === 'SLOW_SERVICE') {
+        billingState.avg_service_time = 2.4;
+        badge.textContent = 'SLOW_SERVICE';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-mono';
+        rec.textContent = 'ENABLE_EXPRESS_QR_BILLING';
+        exp.textContent = 'Cashier transaction bottleneck. Route simple items to QR.';
+        sav.textContent = '29.1%';
+      } else if (type === 'COUNTER_IMBALANCE') {
+        billingState.active_counters = 1;
+        badge.textContent = 'COUNTER_IMBALANCE';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-mono';
+        rec.textContent = 'REBALANCE_ACTIVE_COUNTERS';
+        exp.textContent = 'Counter #2 closed during peak hour. Reopen Counter #2 immediately.';
+        sav.textContent = '47.2%';
+      } else {
+        billingState.queue_length = 4;
+        billingState.active_counters = 2;
+        billingState.avg_service_time = 1.2;
+        badge.textContent = 'NORMAL';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono';
+        rec.textContent = 'NO_ACTION';
+        exp.textContent = 'Maintain current server staffing. Queue flow is stable.';
+        sav.textContent = '0.0%';
+      }
+      recalculateRealTimeWait();
+      updateManagerView();
+    }
+
+    function applyManagerRecommendation() {
+      alert("✅ Intervention applied: Operational parameters balanced!");
+      triggerDisruptionScenario('NORMAL');
+    }
+
+    // Telemetry Sync with FastAPI
+    async function syncTelemetryWithServer() {
+      try {
+        const res = await fetch('/api/billing/telemetry');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.queue_length !== undefined) {
+            billingState.queue_length = data.queue_length;
+            billingState.active_counters = data.active_counters;
+            recalculateRealTimeWait();
+          }
+        }
+      } catch (e) {}
+    }
+  </script>
+
+</body>
+</html>

@@ -531,17 +531,42 @@ def simulate_step() -> Dict[str, Any]:
 
 # ============================================================================
 # 5. STATIC FRONTEND SERVING
+# student.html = student login + app  (served at / and /student)
+# model.html   = AI Control Tower     (served at /model)
 # ============================================================================
-frontend_dir = Path(__file__).parent / "frontend"
+root_dir = Path(__file__).parent
+
+@app.get("/")
+def serve_student_app():
+    """Student App — login page first, then live dashboard."""
+    f = root_dir / "student.html"
+    if f.exists():
+        return FileResponse(f)
+    return HTMLResponse("<h1>QueueFlux — student.html not found</h1>", status_code=404)
+
+@app.get("/student")
+def serve_student_alias():
+    return serve_student_app()
+
+@app.get("/model")
+def serve_model_dashboard():
+    """AI Control Tower — Person 1 ML + Person 2 Intelligence."""
+    f = root_dir / "model.html"
+    if f.exists():
+        return FileResponse(f)
+    return HTMLResponse("<h1>QueueFlux — model.html not found</h1>", status_code=404)
+
+@app.get("/dashboard")
+def serve_legacy_dashboard():
+    """Legacy full-combined dashboard (backward compat)."""
+    f = root_dir / "index.html"
+    if f.exists():
+        return FileResponse(f)
+    return serve_student_app()
+
+frontend_dir = root_dir / "frontend"
 if frontend_dir.exists():
     app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
-
-    @app.get("/")
-    def serve_app():
-        index_file = frontend_dir / "index.html"
-        if index_file.exists():
-            return FileResponse(index_file)
-        return HTMLResponse("<h1>QueueFlux Backend Running</h1>")
 
 
 if __name__ == "__main__":
